@@ -11,7 +11,7 @@ public class AbilityManager {
     private final Map<UUID, String> playerAbilities = new HashMap<>();
     private final Map<UUID, Integer> comboCount = new HashMap<>();
     
-    // Remove the constructor parameter - it should take no arguments
+    // Constructor with NO parameters
     public AbilityManager() {
         // Empty constructor
     }
