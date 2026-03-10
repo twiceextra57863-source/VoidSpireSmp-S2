@@ -11,6 +11,11 @@ public class AbilityManager {
     private final Map<UUID, String> playerAbilities = new HashMap<>();
     private final Map<UUID, Integer> comboCount = new HashMap<>();
     
+    // Remove the constructor parameter - it should take no arguments
+    public AbilityManager() {
+        // Empty constructor
+    }
+    
     public void registerAbility(Ability ability) {
         abilities.put(ability.getName(), ability);
     }
