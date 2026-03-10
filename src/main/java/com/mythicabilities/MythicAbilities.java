@@ -3,6 +3,7 @@ package com.mythicabilities;
 import com.mythicabilities.abilities.AbilityManager;
 import com.mythicabilities.abilities.InfernoTouch;
 import com.mythicabilities.abilities.FrostWalker;
+import com.mythicabilities.admin.GiveAbilityCommand;
 import com.mythicabilities.admin.AdminCommand;
 import com.mythicabilities.admin.AdminPanelGUI;
 import com.mythicabilities.admin.SMPManager;
