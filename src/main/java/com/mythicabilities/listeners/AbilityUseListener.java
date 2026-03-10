@@ -2,6 +2,7 @@ package com.mythicabilities.listeners;
 
 import com.mythicabilities.MythicAbilities;
 import com.mythicabilities.abilities.Ability;
+import net.kyori.adventure.text.Component;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -38,6 +39,9 @@ public class AbilityUseListener implements Listener {
             event.getAction() == Action.RIGHT_CLICK_BLOCK) {
             ability.onRightClick(player);
             plugin.getCooldownManager().setCooldown(player, abilityName, ability.getCooldown());
+        } else if (event.getAction() == Action.LEFT_CLICK_AIR || 
+                   event.getAction() == Action.LEFT_CLICK_BLOCK) {
+            ability.onLeftClick(player);
         }
     }
     
@@ -52,9 +56,7 @@ public class AbilityUseListener implements Listener {
         Ability ability = plugin.getAbilityManager().getAbility(abilityName);
         if (ability == null) return;
         
-        // Handle combo for Inferno Touch
-        if (abilityName.equals("inferno_touch")) {
-            ability.onCombo(player, target);
-        }
+        // Handle combo for abilities
+        ability.onCombo(player, target);
     }
 }
