@@ -14,6 +14,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class AdminPanelGUI implements Listener {
     
@@ -111,7 +112,23 @@ public class AdminPanelGUI implements Listener {
         player.openInventory(gui);
     }
     
-      private String getBorderSize() {
+    private ItemStack createGuiItem(Material material, String name, String... lore) {
+        ItemStack item = new ItemStack(material);
+        ItemMeta meta = item.getItemMeta();
+        meta.displayName(Component.text(name));
+        
+        if (lore.length > 0) {
+            List<Component> loreComponents = Arrays.stream(lore)
+                .map(line -> Component.text(line))
+                .collect(Collectors.toList());
+            meta.lore(loreComponents);
+        }
+        
+        item.setItemMeta(meta);
+        return item;
+    }
+    
+    private String getBorderSize() {
         if (plugin.getServer().getWorlds().isEmpty()) return "Unknown";
         return String.valueOf((int) plugin.getServer().getWorlds().get(0).getWorldBorder().getSize());
     }
@@ -119,21 +136,7 @@ public class AdminPanelGUI implements Listener {
     @EventHandler
     public void onInventoryClick(InventoryClickEvent event) {
         if (!event.getView().title().equals(Component.text("§8⚡ Admin Control Panel ⚡"))) return;
-  private ItemStack createGuiItem(Material material, String name, String... lore) {
-    ItemStack item = new ItemStack(material);
-    ItemMeta meta = item.getItemMeta();
-    meta.displayName(Component.text(name));
-    
-    if (lore.length > 0) {
-        List<Component> loreComponents = Arrays.stream(lore)
-            .map(line -> (Component) Component.text(line))
-            .toList();
-        meta.lore(loreComponents);
-    }
-    
-    item.setItemMeta(meta);
-    return item;
-  }      if (!(event.getWhoClicked() instanceof Player player)) return;
+        if (!(event.getWhoClicked() instanceof Player player)) return;
         
         event.setCancelled(true);
         
@@ -207,4 +210,4 @@ public class AdminPanelGUI implements Listener {
         player.sendMessage("§c§l⚠ EMERGENCY STOP ACTIVATED ⚠");
         player.closeInventory();
     }
-    }
+}
