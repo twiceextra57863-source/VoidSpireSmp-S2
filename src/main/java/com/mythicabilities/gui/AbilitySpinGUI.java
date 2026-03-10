@@ -3,6 +3,7 @@ package com.mythicabilities.gui;
 import com.mythicabilities.MythicAbilities;
 import com.mythicabilities.abilities.Ability;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.Component;
 import net.kyori.adventure.title.Title;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
