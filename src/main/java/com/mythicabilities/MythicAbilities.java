@@ -90,4 +90,4 @@ public class MythicAbilities extends JavaPlugin {
     public WorldBorderManager getWorldBorderManager() {
         return worldBorderManager;
     }
-}
+    }
