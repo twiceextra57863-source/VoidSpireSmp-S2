@@ -1,18 +1,17 @@
 package com.mythicabilities.admin;
 
 import com.mythicabilities.MythicAbilities;
+import com.mythicabilities.utils.TitleBar;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.format.NamedTextColor;
-import net.kyori.adventure.text.format.TextDecoration;
 import net.kyori.adventure.title.Title;
 import org.bukkit.Bukkit;
 import org.bukkit.World;
-import org.bukkit.WorldBorder;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.scheduler.BukkitTask;
 
 import java.time.Duration;
 import java.util.HashMap;
@@ -28,7 +27,7 @@ public class AdminCommand implements CommandExecutor {
     
     private boolean smpActive = false;
     private int graceTimeLeft = 0;
-    private int smpTaskId = -1;
+    private BukkitTask smpTask = null; // Changed from int to BukkitTask
     private boolean pvpEnabled = false;
     
     public AdminCommand(MythicAbilities plugin) {
@@ -154,7 +153,7 @@ public class AdminCommand implements CommandExecutor {
     }
     
     private void startSMPScheduler(Player admin) {
-        smpTaskId = new BukkitRunnable() {
+        smpTask = new BukkitRunnable() {
             int timeLeft = graceTimeLeft;
             
             @Override
@@ -214,8 +213,9 @@ public class AdminCommand implements CommandExecutor {
         }
         
         smpActive = false;
-        if (smpTaskId != -1) {
-            Bukkit.getScheduler().cancelTask(smpTaskId);
+        if (smpTask != null) {
+            smpTask.cancel();
+            smpTask = null;
         }
         
         // Reset border
@@ -295,8 +295,8 @@ public class AdminCommand implements CommandExecutor {
         
         if (smpActive) {
             // Restart timer with new grace period
-            if (smpTaskId != -1) {
-                Bukkit.getScheduler().cancelTask(smpTaskId);
+            if (smpTask != null) {
+                smpTask.cancel();
             }
             startSMPScheduler(player);
         }
@@ -317,4 +317,4 @@ public class AdminCommand implements CommandExecutor {
     public boolean isSMPActive() { return smpActive; }
     public boolean isPVPEnabled() { return pvpEnabled; }
     public int getGraceTimeLeft() { return graceTimeLeft; }
-}
+    }
