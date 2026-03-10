@@ -1,0 +1,1 @@
+# VoidSpireSmp-S2
