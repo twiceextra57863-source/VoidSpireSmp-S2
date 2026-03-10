@@ -3,7 +3,7 @@ package com.mythicabilities.utils;
 import org.bukkit.Location;
 import org.bukkit.Particle;
 import org.bukkit.World;
-import org.bukkit.entity.Player;
+import org.bukkit.util.Vector; // ADD THIS IMPORT
 
 public class ParticleEffects {
     
