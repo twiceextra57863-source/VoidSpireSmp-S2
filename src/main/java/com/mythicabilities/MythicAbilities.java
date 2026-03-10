@@ -22,9 +22,9 @@ public class MythicAbilities extends JavaPlugin {
         // Save default config
         saveDefaultConfig();
         
-        // Initialize managers
+        // Initialize managers - FIXED: Remove 'this' parameter
         this.cooldownManager = new CooldownManager();
-        this.abilityManager = new AbilityManager(this);
+        this.abilityManager = new AbilityManager(); // No parameter needed now
         
         // Register abilities
         registerAbilities();
