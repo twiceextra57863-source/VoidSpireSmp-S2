@@ -1,0 +1,33 @@
+# MythicAbilities Configuration
+# Version: 1.0.0
+# Minecraft Version: 1.21.11
+
+abilities:
+  inferno_touch:
+    enabled: true
+    cooldown: 30
+    damage: 6
+    domain_duration: 10
+    
+  frost_walker:
+    enabled: true
+    cooldown: 20
+    damage: 4
+    freeze_duration: 5
+
+# Customization settings
+gui:
+  title: "§8✦ Ability Spin ✦"
+  spin_slot: 22
+  animation_speed: 2
+
+# Particle settings
+particles:
+  enabled: true
+  density: 1.0
+  quality: high
+
+# Cooldown display
+cooldown:
+  format: "§cCooldown: {time}s"
+  position: "actionbar"
