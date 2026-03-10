@@ -1,0 +1,16 @@
+name: MythicAbilities
+version: 1.0.0
+main: com.mythicabilities.MythicAbilities
+api-version: 1.21
+author: YourName
+description: Advanced abilities plugin with dynamic features
+
+commands:
+  abilities:
+    description: Open abilities menu
+    usage: /abilities
+
+permissions:
+  mythicabilities.use:
+    description: Allows using abilities
+    default: true
