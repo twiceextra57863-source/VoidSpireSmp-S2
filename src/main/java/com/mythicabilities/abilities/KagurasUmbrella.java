@@ -102,9 +102,9 @@ public class KagurasUmbrella extends Ability {
         player.getWorld().playSound(player.getLocation(), Sound.ENTITY_ILLUSIONER_PREPARE_BLINDNESS, 1, 0.8f);
         player.getWorld().playSound(player.getLocation(), Sound.ITEM_CHORUS_FRUIT_TELEPORT, 1, 1.2f);
         
-        // Initial particle burst
-        player.getWorld().spawnParticle(Particle.SPELL_MOB, umbrellaLoc, 100, 0.5, 0.5, 0.5, 1);
-        player.getWorld().spawnParticle(Particle.PORTAL, umbrellaLoc, 50, 0.3, 0.3, 0.3, 0.5);
+        // Initial particle burst - FIXED: Replaced SPELL_MOB with PORTAL + END_ROD
+        player.getWorld().spawnParticle(Particle.PORTAL, umbrellaLoc, 100, 0.5, 0.5, 0.5, 0.5);
+        player.getWorld().spawnParticle(Particle.END_ROD, umbrellaLoc, 50, 0.5, 0.5, 0.5, 0.1);
         
         // Start umbrella particles
         startUmbrellaParticles(player);
@@ -144,14 +144,15 @@ public class KagurasUmbrella extends Ability {
                     umbrellaEnt.teleport(umbrellaLoc);
                 }
                 
-                // Form-specific particles
+                // Form-specific particles - FIXED: Replaced all SPELL_MOB
                 if (purpleForm) {
-                    // Purple particles (damage form)
-                    player.getWorld().spawnParticle(Particle.SPELL_MOB, umbrellaLoc, 10, 0.2, 0.2, 0.2, 1);
-                    player.getWorld().spawnParticle(Particle.PORTAL, umbrellaLoc, 5, 0.1, 0.1, 0.1, 0.5);
+                    // Purple particles (damage form) - using PORTAL + END_ROD
+                    player.getWorld().spawnParticle(Particle.PORTAL, umbrellaLoc, 10, 0.2, 0.2, 0.2, 0.5);
+                    player.getWorld().spawnParticle(Particle.END_ROD, umbrellaLoc, 5, 0.1, 0.1, 0.1, 0.1);
+                    player.getWorld().spawnParticle(Particle.SOUL_FIRE_FLAME, umbrellaLoc, 5, 0.1, 0.1, 0.1, 0.02);
                     
                     // Purple aura around player
-                    player.getWorld().spawnParticle(Particle.SPELL_MOB, player.getLocation().add(0, 1, 0), 5, 0.5, 0.5, 0.5, 1);
+                    player.getWorld().spawnParticle(Particle.PORTAL, player.getLocation().add(0, 1, 0), 5, 0.5, 0.5, 0.5, 0.3);
                 } else {
                     // Yellow particles (control form)
                     player.getWorld().spawnParticle(Particle.WAX_ON, umbrellaLoc, 10, 0.2, 0.2, 0.2, 0);
@@ -169,9 +170,11 @@ public class KagurasUmbrella extends Ability {
                     
                     Location symbolLoc = new Location(player.getWorld(), x, umbrellaLoc.getY() - 1, z);
                     if (purpleForm) {
-                        player.getWorld().spawnParticle(Particle.SPELL_MOB, symbolLoc, 2, 0, 0.1, 0, 1);
+                        player.getWorld().spawnParticle(Particle.PORTAL, symbolLoc, 2, 0, 0.1, 0, 0.3);
+                        player.getWorld().spawnParticle(Particle.END_ROD, symbolLoc, 1, 0, 0.1, 0, 0);
                     } else {
                         player.getWorld().spawnParticle(Particle.WAX_ON, symbolLoc, 2, 0, 0.1, 0, 0);
+                        player.getWorld().spawnParticle(Particle.HAPPY_VILLAGER, symbolLoc, 1, 0, 0.1, 0, 0);
                     }
                 }
                 
@@ -213,16 +216,18 @@ public class KagurasUmbrella extends Ability {
         // Effect
         player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1, 1.5f);
         
-        // Particle burst
+        // Particle burst - FIXED: Replaced SPELL_MOB
         Location umbrellaLoc = umbrellaLocation.get(playerId);
         if (umbrellaLoc != null) {
             if (newForm) {
                 // Switching to purple
-                player.getWorld().spawnParticle(Particle.SPELL_MOB, umbrellaLoc, 50, 0.5, 0.5, 0.5, 1);
+                player.getWorld().spawnParticle(Particle.PORTAL, umbrellaLoc, 50, 0.5, 0.5, 0.5, 0.5);
+                player.getWorld().spawnParticle(Particle.END_ROD, umbrellaLoc, 30, 0.5, 0.5, 0.5, 0.1);
                 player.sendActionBar(Component.text("§dPurple Form §f(Damage Mode)"));
             } else {
                 // Switching to yellow
                 player.getWorld().spawnParticle(Particle.WAX_ON, umbrellaLoc, 50, 0.5, 0.5, 0.5, 0);
+                player.getWorld().spawnParticle(Particle.HAPPY_VILLAGER, umbrellaLoc, 30, 0.5, 0.5, 0.5, 0);
                 player.sendActionBar(Component.text("§eYellow Form §f(Control Mode)"));
             }
         }
@@ -278,9 +283,9 @@ public class KagurasUmbrella extends Ability {
                 loc.add(direction);
                 distance++;
                 
-                // Purple trail
-                player.getWorld().spawnParticle(Particle.SPELL_MOB, loc, 15, 0.2, 0.2, 0.2, 1);
-                player.getWorld().spawnParticle(Particle.PORTAL, loc, 8, 0.1, 0.1, 0.1, 0.3);
+                // Purple trail - FIXED: Replaced SPELL_MOB
+                player.getWorld().spawnParticle(Particle.PORTAL, loc, 15, 0.2, 0.2, 0.2, 0.3);
+                player.getWorld().spawnParticle(Particle.END_ROD, loc, 8, 0.1, 0.1, 0.1, 0.05);
                 
                 // Damage enemies in path
                 for (Entity entity : player.getWorld().getNearbyEntities(loc, 1.5, 1.5, 1.5)) {
@@ -291,9 +296,10 @@ public class KagurasUmbrella extends Ability {
                         // Slow
                         target.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 40, 1));
                         
-                        // Hit effect
+                        // Hit effect - FIXED: Replaced SPELL_MOB
                         target.getWorld().spawnParticle(Particle.DAMAGE_INDICATOR, target.getLocation().add(0, 1, 0), 10, 0.3, 0.5, 0.3, 0);
-                        target.getWorld().spawnParticle(Particle.SPELL_MOB, target.getLocation().add(0, 1, 0), 20, 0.3, 0.5, 0.3, 1);
+                        target.getWorld().spawnParticle(Particle.PORTAL, target.getLocation().add(0, 1, 0), 20, 0.3, 0.5, 0.3, 0.3);
+                        target.getWorld().spawnParticle(Particle.END_ROD, target.getLocation().add(0, 1, 0), 10, 0.3, 0.5, 0.3, 0.05);
                         
                         target.sendMessage(Component.text("§dYin energy drains you!"));
                     }
@@ -378,12 +384,13 @@ public class KagurasUmbrella extends Ability {
         player.getWorld().playSound(originalLoc, Sound.ITEM_CHORUS_FRUIT_TELEPORT, 1, 0.8f);
         player.getWorld().playSound(umbrellaLoc, Sound.ITEM_CHORUS_FRUIT_TELEPORT, 1, 1.2f);
         
-        // Rainbow particles at both locations
+        // Rainbow particles at both locations - FIXED: Replaced SPELL_MOB
         for (Location loc : Arrays.asList(originalLoc, umbrellaLoc)) {
             for (int i = 0; i < 3; i++) {
                 double hue = (i * 120) * Math.PI / 180;
-                player.getWorld().spawnParticle(Particle.SPELL_MOB, loc.clone().add(0, 1, 0), 30, 0.3, 0.3, 0.3, 1);
-                player.getWorld().spawnParticle(Particle.WAX_ON, loc.clone().add(0, 1, 0), 20, 0.2, 0.2, 0.2, 0);
+                player.getWorld().spawnParticle(Particle.PORTAL, loc.clone().add(0, 1, 0), 30, 0.3, 0.3, 0.3, 0.5);
+                player.getWorld().spawnParticle(Particle.END_ROD, loc.clone().add(0, 1, 0), 20, 0.3, 0.3, 0.3, 0.1);
+                player.getWorld().spawnParticle(Particle.WAX_ON, loc.clone().add(0, 1, 0), 20, 0.3, 0.3, 0.3, 0);
             }
             
             // Damage circle at both positions
@@ -417,12 +424,12 @@ public class KagurasUmbrella extends Ability {
         world.playSound(umbrellaLoc, Sound.ENTITY_WITHER_SPAWN, 1, 0.6f);
         world.playSound(umbrellaLoc, Sound.ENTITY_GENERIC_EXPLODE, 2, 0.5f);
         
-        // Massive particle burst
+        // Massive particle burst - FIXED: Replaced SPELL_MOB
         world.spawnParticle(Particle.EXPLOSION_EMITTER, umbrellaLoc, 3);
         world.spawnParticle(Particle.FLASH, umbrellaLoc, 1);
-        world.spawnParticle(Particle.SPELL_MOB, umbrellaLoc, 500, 5, 3, 5, 2);
-        world.spawnParticle(Particle.WAX_ON, umbrellaLoc, 500, 5, 3, 5, 2);
-        world.spawnParticle(Particle.PORTAL, umbrellaLoc, 300, 4, 3, 4, 2);
+        world.spawnParticle(Particle.PORTAL, umbrellaLoc, 500, 5, 3, 5, 1);
+        world.spawnParticle(Particle.END_ROD, umbrellaLoc, 500, 5, 3, 5, 0.2);
+        world.spawnParticle(Particle.WAX_ON, umbrellaLoc, 300, 4, 3, 4, 0);
         
         // Damage and stun all enemies in large area
         double totalDamageDealt = 0;
@@ -485,13 +492,5 @@ public class KagurasUmbrella extends Ability {
         player.sendMessage(Component.text("§dSeimei Umbrella fades away..."));
     }
     
-    @Override
-    public void onLeftClick(Player player) {
-        // Already handled above
-    }
-    
-    @Override
-    public void onRightClick(Player player) {
-        // Already handled above
-    }
+    // REMOVED duplicate onLeftClick and onRightClick methods at the end
 }
