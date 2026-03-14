@@ -1,11 +1,12 @@
 package com.mythicabilities.admin;
 
 import com.mythicabilities.MythicAbilities;
+import com.mythicabilities.abilities.Ability;
 import com.mythicabilities.utils.TitleBar;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.title.Title;
 import org.bukkit.Bukkit;
-import org.bukkit.Location; // ADD THIS MISSING IMPORT
+import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -111,6 +112,40 @@ public class AdminCommand implements CommandExecutor, TabCompleter {
                 }
                 break;
                 
+            case "event":
+                if (args.length == 1) {
+                    showEventHelp(player);
+                } else if (args[1].equalsIgnoreCase("start")) {
+                    if (args.length >= 3) {
+                        try {
+                            int seconds = Integer.parseInt(args[2]);
+                            String ability = (args.length >= 4) ? args[3] : "random";
+                            startAbilityEvent(player, seconds, ability);
+                        } catch (NumberFormatException e) {
+                            player.sendMessage("§cInvalid time format!");
+                        }
+                    } else {
+                        player.sendMessage("§cUsage: /smp event start <seconds> [ability]");
+                    }
+                } else if (args[1].equalsIgnoreCase("stop")) {
+                    stopAbilityEvent(player);
+                } else if (args[1].equalsIgnoreCase("status")) {
+                    showEventStatus(player);
+                }
+                break;
+                
+            case "force":
+                if (args.length == 1) {
+                    showForceHelp(player);
+                } else if (args[1].equalsIgnoreCase("on")) {
+                    setForceGive(player, true);
+                } else if (args[1].equalsIgnoreCase("off")) {
+                    setForceGive(player, false);
+                } else if (args[1].equalsIgnoreCase("status")) {
+                    showForceStatus(player);
+                }
+                break;
+                
             case "help":
                 showHelp(player);
                 break;
@@ -134,7 +169,7 @@ public class AdminCommand implements CommandExecutor, TabCompleter {
         if (args.length == 1) {
             // First argument - main commands
             String partial = args[0].toLowerCase();
-            List<String> commands = Arrays.asList("start", "stop", "status", "set", "border", "pvp", "grace", "help");
+            List<String> commands = Arrays.asList("start", "stop", "status", "set", "border", "pvp", "grace", "event", "force", "help");
             
             for (String cmd : commands) {
                 if (cmd.startsWith(partial)) {
@@ -174,6 +209,26 @@ public class AdminCommand implements CommandExecutor, TabCompleter {
                         completions.add(time);
                     }
                 }
+                
+            } else if (args[0].equalsIgnoreCase("event")) {
+                String partial = args[1].toLowerCase();
+                List<String> eventCmds = Arrays.asList("start", "stop", "status");
+                
+                for (String cmd : eventCmds) {
+                    if (cmd.startsWith(partial)) {
+                        completions.add(cmd);
+                    }
+                }
+                
+            } else if (args[0].equalsIgnoreCase("force")) {
+                String partial = args[1].toLowerCase();
+                List<String> forceCmds = Arrays.asList("on", "off", "status");
+                
+                for (String cmd : forceCmds) {
+                    if (cmd.startsWith(partial)) {
+                        completions.add(cmd);
+                    }
+                }
             }
             
         } else if (args.length == 3) {
@@ -196,6 +251,17 @@ public class AdminCommand implements CommandExecutor, TabCompleter {
                 for (String size : sizes) {
                     if (size.startsWith(partial)) {
                         completions.add(size);
+                    }
+                }
+                
+            } else if (args[0].equalsIgnoreCase("event") && args[1].equalsIgnoreCase("start")) {
+                // Suggest ability names
+                String partial = args[2].toLowerCase();
+                completions.add("random");
+                
+                for (String abilityName : plugin.getAbilityManager().getAllAbilities().keySet()) {
+                    if (abilityName.toLowerCase().startsWith(partial)) {
+                        completions.add(abilityName);
                     }
                 }
             }
@@ -423,6 +489,83 @@ public class AdminCommand implements CommandExecutor, TabCompleter {
         }
     }
     
+    // New Event Methods
+    private void startAbilityEvent(Player player, int seconds, String abilityName) {
+        // Check if ability exists (if not random)
+        if (!abilityName.equalsIgnoreCase("random")) {
+            Ability ability = plugin.getAbilityManager().getAbility(abilityName);
+            if (ability == null) {
+                player.sendMessage("§cAbility not found: " + abilityName);
+                player.sendMessage("§7Use §e/giveability list §7to see all abilities");
+                return;
+            }
+        }
+        
+        // Start event
+        plugin.getForceAbilityManager().startEvent(seconds, abilityName);
+        
+        player.sendMessage("§a✅ Ability event started!");
+        player.sendMessage("§eTime: §a" + seconds + " seconds");
+        player.sendMessage("§eAbility: §a" + (abilityName.equalsIgnoreCase("random") ? "Random" : abilityName));
+    }
+    
+    private void stopAbilityEvent(Player player) {
+        plugin.getForceAbilityManager().stopEvent();
+        player.sendMessage("§c✅ Ability event stopped!");
+    }
+    
+    private void showEventStatus(Player player) {
+        ForceAbilityManager fam = plugin.getForceAbilityManager();
+        
+        player.sendMessage("§6§l╔═══════════ EVENT STATUS ═══════════╗");
+        player.sendMessage("§6║ §eActive: " + (fam.isEventActive() ? "§aYES" : "§cNO"));
+        if (fam.isEventActive()) {
+            player.sendMessage("§6║ §eTime Left: §a" + formatTime(fam.getEventTimer()));
+            String abilityDisplay = fam.getEventAbility().equalsIgnoreCase("random") ? "§dRandom" : 
+                plugin.getAbilityManager().getAbility(fam.getEventAbility()).getDisplayName();
+            player.sendMessage("§6║ §eAbility: " + abilityDisplay);
+        }
+        player.sendMessage("§6╚════════════════════════════════════╝");
+    }
+    
+    private void setForceGive(Player player, boolean enabled) {
+        plugin.getConfig().set("force_ability.enabled", enabled);
+        plugin.getConfig().set("force_ability.give_on_first_join", enabled);
+        plugin.saveConfig();
+        plugin.getForceAbilityManager().reloadConfig();
+        
+        player.sendMessage("§a✅ Force ability give " + (enabled ? "ENABLED" : "DISABLED"));
+        player.sendMessage("§ePlayers will " + (enabled ? "now" : "not") + " receive abilities on first join");
+    }
+    
+    private void showForceStatus(Player player) {
+        ForceAbilityManager fam = plugin.getForceAbilityManager();
+        
+        player.sendMessage("§6§l╔═══════════ FORCE GIVE STATUS ═══════════╗");
+        player.sendMessage("§6║ §eEnabled: " + (fam.shouldGiveOnFirstJoin() ? "§aYES" : "§cNO"));
+        player.sendMessage("§6║ §eFirst Join Give: " + (fam.shouldGiveOnFirstJoin() ? "§aYES" : "§cNO"));
+        player.sendMessage("§6╚══════════════════════════════════════════╝");
+    }
+    
+    private void showEventHelp(Player player) {
+        player.sendMessage("§6§l╔═══════════ EVENT COMMANDS ═══════════╗");
+        player.sendMessage("§6║ §e/smp event start <seconds> [ability]");
+        player.sendMessage("§6║ §7  - Start ability event");
+        player.sendMessage("§6║ §7  Example: §e/smp event start 60 random");
+        player.sendMessage("§6║ §7  Example: §e/smp event start 120 void_walker");
+        player.sendMessage("§6║ §e/smp event stop §7- Stop current event");
+        player.sendMessage("§6║ §e/smp event status §7- Show event status");
+        player.sendMessage("§6╚══════════════════════════════════════════╝");
+    }
+    
+    private void showForceHelp(Player player) {
+        player.sendMessage("§6§l╔═══════════ FORCE GIVE COMMANDS ═══════════╗");
+        player.sendMessage("§6║ §e/smp force on §7- Enable force ability give");
+        player.sendMessage("§6║ §e/smp force off §7- Disable force ability give");
+        player.sendMessage("§6║ §e/smp force status §7- Show current status");
+        player.sendMessage("§6╚══════════════════════════════════════════════╝");
+    }
+    
     private void showHelp(Player player) {
         player.sendMessage("§6§l╔═══════════ SMP ADMIN COMMANDS ═══════════╗");
         player.sendMessage("§6║ §e/smp start §7- Start SMP with 20x20 border");
@@ -436,9 +579,17 @@ public class AdminCommand implements CommandExecutor, TabCompleter {
         player.sendMessage("§6║ §e/smp border reset §7- Reset border");
         player.sendMessage("§6║ §e/smp pvp §7- Toggle PVP");
         player.sendMessage("§6║ §e/smp grace <seconds> §7- Set grace time");
+        player.sendMessage("§6║ §e/smp event §7- Ability event commands");
+        player.sendMessage("§6║ §e/smp force §7- Force give controls");
         player.sendMessage("§6║ §e/admin §7- Open admin GUI");
         player.sendMessage("§6║ §e/giveability <player> <ability> §7- Give ability");
         player.sendMessage("§6╚═══════════════════════════════════════════╝");
+    }
+    
+    private String formatTime(int seconds) {
+        int minutes = seconds / 60;
+        int secs = seconds % 60;
+        return String.format("%02d:%02d", minutes, secs);
     }
     
     // Getters
