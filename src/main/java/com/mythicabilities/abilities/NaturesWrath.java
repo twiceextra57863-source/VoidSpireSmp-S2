@@ -5,9 +5,6 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.title.Title;
 import org.bukkit.*;
 import org.bukkit.block.Block;
-import org.bukkit.block.data.Ageable;
-import org.bukkit.block.data.BlockData;
-import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -114,7 +111,7 @@ public class NaturesWrath extends Ability {
             Title.Times.times(Duration.ofSeconds(1), Duration.ofSeconds(2), Duration.ofSeconds(1))
         ));
         
-        // Play awakening sound
+        // Play awakening sound - FIXED: Correct sound name
         player.getWorld().playSound(player.getLocation(), Sound.BLOCK_GROWING_PLANT_CROP, 1, 0.8f);
         player.getWorld().playSound(player.getLocation(), Sound.ENTITY_WITHER_SPAWN, 1, 1.2f);
         
@@ -222,7 +219,8 @@ public class NaturesWrath extends Ability {
                         // Thorn damage
                         if (ticks % 20 == 0) { // Every second
                             enemy.damage(2, player); // 1 heart per second
-                            enemy.getWorld().playSound(enemy.getLocation(), Sound.ENTITY_SWEET_BERRY_BUSH_HURT, 1, 0.8f);
+                            // FIXED: Correct sound name
+                            enemy.getWorld().playSound(enemy.getLocation(), Sound.BLOCK_SWEET_BERRY_BUSH_BREAK, 1, 0.8f);
                         }
                         
                         // Poison effect
