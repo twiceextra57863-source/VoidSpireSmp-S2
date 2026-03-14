@@ -5,6 +5,7 @@ import com.mythicabilities.utils.TitleBar;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.title.Title;
 import org.bukkit.Bukkit;
+import org.bukkit.Location; // ADD THIS MISSING IMPORT
 import org.bukkit.World;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -444,4 +445,4 @@ public class AdminCommand implements CommandExecutor, TabCompleter {
     public boolean isSMPActive() { return smpActive; }
     public boolean isPVPEnabled() { return pvpEnabled; }
     public int getGraceTimeLeft() { return graceTimeLeft; }
-                    }
+}
