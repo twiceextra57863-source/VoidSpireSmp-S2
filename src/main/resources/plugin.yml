@@ -12,7 +12,7 @@ commands:
     
   smp:
     description: Main SMP control command
-    usage: /smp <start|stop|status|set|border|pvp|grace>
+    usage: /smp <start|stop|status|set|border|pvp|grace|help>
     permission: mythicabilities.admin
     
   admin:
@@ -22,8 +22,9 @@ commands:
     
   giveability:
     description: Give ability to player
-    usage: /giveability <player> <ability>
+    usage: /giveability <player> <ability> or /giveability <ability> (self)
     permission: mythicabilities.admin
+    aliases: [ga, giveabil]
 
 permissions:
   mythicabilities.use:
