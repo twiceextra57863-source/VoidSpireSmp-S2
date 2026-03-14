@@ -164,7 +164,7 @@ public class MandelaEffect extends Ability {
                     
                     // Clone particle effect
                     player.getWorld().spawnParticle(Particle.ENCHANT, cloneLoc, 10, 0.5, 1, 0.5, 0);
-                    player.getWorld().spawnParticle(Particle.SPELL_WITCH, cloneLoc, 5, 0.5, 1, 0.5, 0);
+                    player.getWorld().spawnParticle(Particle.ENCHANT, cloneLoc, 5, 0.5, 1, 0.5, 0);
                     
                     ticks += 5;
                 }
@@ -458,4 +458,4 @@ public class MandelaEffect extends Ability {
             onTrigger(player);
         }
     }
-                            }
+            }
