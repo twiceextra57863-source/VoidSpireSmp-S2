@@ -9,16 +9,15 @@ import org.bukkit.World;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
+import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 
 import java.time.Duration;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
-public class AdminCommand implements CommandExecutor {
+public class AdminCommand implements CommandExecutor, TabCompleter {
     
     private final MythicAbilities plugin;
     private final SMPManager smpManager;
@@ -27,7 +26,7 @@ public class AdminCommand implements CommandExecutor {
     
     private boolean smpActive = false;
     private int graceTimeLeft = 0;
-    private BukkitTask smpTask = null; // Changed from int to BukkitTask
+    private BukkitTask smpTask = null;
     private boolean pvpEnabled = false;
     
     public AdminCommand(MythicAbilities plugin) {
@@ -87,6 +86,10 @@ public class AdminCommand implements CommandExecutor {
                             player.sendMessage("§cInvalid size! Use numbers.");
                         }
                     }
+                } else if (args[1].equalsIgnoreCase("center")) {
+                    showBorderCenter(player);
+                } else if (args[1].equalsIgnoreCase("reset")) {
+                    resetWorldBorder(player);
                 }
                 break;
                 
@@ -107,12 +110,97 @@ public class AdminCommand implements CommandExecutor {
                 }
                 break;
                 
+            case "help":
+                showHelp(player);
+                break;
+                
             default:
-                player.sendMessage("§cUnknown command! Use: /smp <start|stop|status|set|border|pvp|grace>");
+                player.sendMessage("§cUnknown command! Use §e/smp help §cfor commands.");
                 break;
         }
         
         return true;
+    }
+    
+    @Override
+    public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
+        List<String> completions = new ArrayList<>();
+        
+        if (!(sender instanceof Player) || !sender.hasPermission("mythicabilities.admin")) {
+            return completions;
+        }
+        
+        if (args.length == 1) {
+            // First argument - main commands
+            String partial = args[0].toLowerCase();
+            List<String> commands = Arrays.asList("start", "stop", "status", "set", "border", "pvp", "grace", "help");
+            
+            for (String cmd : commands) {
+                if (cmd.startsWith(partial)) {
+                    completions.add(cmd);
+                }
+            }
+            
+        } else if (args.length == 2) {
+            // Second argument - subcommands
+            if (args[0].equalsIgnoreCase("set")) {
+                String partial = args[1].toLowerCase();
+                List<String> settings = Arrays.asList("pvp", "border", "grace");
+                
+                for (String setting : settings) {
+                    if (setting.startsWith(partial)) {
+                        completions.add(setting);
+                    }
+                }
+                
+            } else if (args[0].equalsIgnoreCase("border")) {
+                String partial = args[1].toLowerCase();
+                List<String> borderCmds = Arrays.asList("set", "center", "reset");
+                
+                for (String cmd : borderCmds) {
+                    if (cmd.startsWith(partial)) {
+                        completions.add(cmd);
+                    }
+                }
+                
+            } else if (args[0].equalsIgnoreCase("grace")) {
+                // Suggest time values
+                String partial = args[1].toLowerCase();
+                List<String> times = Arrays.asList("30", "60", "120", "300");
+                
+                for (String time : times) {
+                    if (time.startsWith(partial)) {
+                        completions.add(time);
+                    }
+                }
+            }
+            
+        } else if (args.length == 3) {
+            // Third argument - values
+            if (args[0].equalsIgnoreCase("set") && args[1].equalsIgnoreCase("pvp")) {
+                String partial = args[2].toLowerCase();
+                List<String> bools = Arrays.asList("true", "false");
+                
+                for (String bool : bools) {
+                    if (bool.startsWith(partial)) {
+                        completions.add(bool);
+                    }
+                }
+                
+            } else if (args[0].equalsIgnoreCase("border") && args[1].equalsIgnoreCase("set")) {
+                // Suggest border sizes
+                String partial = args[2].toLowerCase();
+                List<String> sizes = Arrays.asList("20", "100", "500", "1000", "5000", "10000", "20000");
+                
+                for (String size : sizes) {
+                    if (size.startsWith(partial)) {
+                        completions.add(size);
+                    }
+                }
+            }
+        }
+        
+        return completions;
     }
     
     private void openAdminPanel(Player player) {
@@ -274,11 +362,25 @@ public class AdminCommand implements CommandExecutor {
         Bukkit.broadcast(Component.text("§eWorld border has been set to §a" + size + "x" + size));
     }
     
+    private void resetWorldBorder(Player player) {
+        borderManager.resetBorder();
+        player.sendMessage("§a✅ World border reset to default!");
+    }
+    
+    private void showBorderCenter(Player player) {
+        Location center = borderManager.getCenter();
+        if (center != null) {
+            player.sendMessage("§aBorder Center: §eX: " + center.getBlockX() + " Z: " + center.getBlockZ());
+        } else {
+            player.sendMessage("§cBorder center not set!");
+        }
+    }
+    
     private void showBorderMenu(Player player) {
         player.sendMessage("§6§l╔═══════════ BORDER CONTROLS ═══════════╗");
-        player.sendMessage("§6║ §e/border set <size> §7- Set border size");
-        player.sendMessage("§6║ §e/border center §7- Show border center");
-        player.sendMessage("§6║ §e/border reset §7- Reset to default");
+        player.sendMessage("§6║ §e/smp border set <size> §7- Set border size");
+        player.sendMessage("§6║ §e/smp border center §7- Show border center");
+        player.sendMessage("§6║ §e/smp border reset §7- Reset to default");
         player.sendMessage("§6║ §eCurrent: §a" + borderManager.getCurrentSize() + " blocks");
         player.sendMessage("§6╚════════════════════════════════════════╝");
     }
@@ -310,11 +412,36 @@ public class AdminCommand implements CommandExecutor {
         } else {
             graceTimeLeft = 60;
             player.sendMessage("§aGrace period activated: 60 seconds");
+            
+            if (smpActive) {
+                if (smpTask != null) {
+                    smpTask.cancel();
+                }
+                startSMPScheduler(player);
+            }
         }
+    }
+    
+    private void showHelp(Player player) {
+        player.sendMessage("§6§l╔═══════════ SMP ADMIN COMMANDS ═══════════╗");
+        player.sendMessage("§6║ §e/smp start §7- Start SMP with 20x20 border");
+        player.sendMessage("§6║ §e/smp stop §7- Stop SMP");
+        player.sendMessage("§6║ §e/smp status §7- Show current status");
+        player.sendMessage("§6║ §e/smp set pvp <true/false> §7- Set PVP");
+        player.sendMessage("§6║ §e/smp set border <size> §7- Set border");
+        player.sendMessage("§6║ §e/smp set grace <seconds> §7- Set grace period");
+        player.sendMessage("§6║ §e/smp border set <size> §7- Change border");
+        player.sendMessage("§6║ §e/smp border center §7- Show border center");
+        player.sendMessage("§6║ §e/smp border reset §7- Reset border");
+        player.sendMessage("§6║ §e/smp pvp §7- Toggle PVP");
+        player.sendMessage("§6║ §e/smp grace <seconds> §7- Set grace time");
+        player.sendMessage("§6║ §e/admin §7- Open admin GUI");
+        player.sendMessage("§6║ §e/giveability <player> <ability> §7- Give ability");
+        player.sendMessage("§6╚═══════════════════════════════════════════╝");
     }
     
     // Getters
     public boolean isSMPActive() { return smpActive; }
     public boolean isPVPEnabled() { return pvpEnabled; }
     public int getGraceTimeLeft() { return graceTimeLeft; }
-    }
+                    }
