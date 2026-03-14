@@ -96,7 +96,10 @@ public class AbilitySpinGUI implements Listener, org.bukkit.command.CommandExecu
     public void onPlayerMove(PlayerMoveEvent event) {
         // Freeze player during spin
         if (isSpinning.getOrDefault(event.getPlayer().getUniqueId(), false)) {
-            event.setCancelled(true);
+            if (event.getFrom().getX() != event.getTo().getX() || 
+                event.getFrom().getZ() != event.getTo().getZ()) {
+                event.setCancelled(true);
+            }
         }
     }
     
@@ -108,8 +111,13 @@ public class AbilitySpinGUI implements Listener, org.bukkit.command.CommandExecu
         }
     }
     
-    private void startVisualSpin(Player player) {
+    // CHANGED: Made this method PUBLIC so it can be called from PlayerJoinListener
+    public void startVisualSpin(Player player) {
         UUID playerId = player.getUniqueId();
+        
+        // Don't spin if already spinning
+        if (isSpinning.getOrDefault(playerId, false)) return;
+        
         isSpinning.put(playerId, true);
         
         // Freeze player
@@ -119,6 +127,15 @@ public class AbilitySpinGUI implements Listener, org.bukkit.command.CommandExecu
         
         // Get all ability names
         List<String> abilityNames = new ArrayList<>(plugin.getAbilityManager().getAllAbilities().keySet());
+        if (abilityNames.isEmpty()) {
+            player.sendMessage(Component.text("§cNo abilities available!"));
+            isSpinning.put(playerId, false);
+            player.setWalkSpeed(0.2f);
+            player.setAllowFlight(false);
+            player.setFlying(false);
+            return;
+        }
+        
         String selectedAbility = abilityNames.get(random.nextInt(abilityNames.size()));
         
         // Create armor stand for spinning
@@ -279,4 +296,4 @@ public class AbilitySpinGUI implements Listener, org.bukkit.command.CommandExecu
         isSpinning.put(playerId, false);
         spinFrames.remove(playerId);
     }
-                        }
+                                    }
