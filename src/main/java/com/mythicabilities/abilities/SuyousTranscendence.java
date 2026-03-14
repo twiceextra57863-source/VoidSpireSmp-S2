@@ -125,20 +125,19 @@ public class SuyousTranscendence extends Ability {
         
         // Clear previous form buffs
         player.removePotionEffect(PotionEffectType.SPEED);
-        player.removePotionEffect(PotionEffectType.STRENGTH);
+        player.removePotionEffect(PotionEffectType.STRENGTH); // FIXED: was INCREASE_DAMAGE
         player.removePotionEffect(PotionEffectType.RESISTANCE);
-        player.removePotionEffect(PotionEffectType.INCREASE_DAMAGE);
-        player.removePotionEffect(PotionEffectType.FAST_DIGGING);
+        player.removePotionEffect(PotionEffectType.HASTE); // FIXED: was FAST_DIGGING
         
         if (mortal) {
             // Mortal Form: Speed & Attack Speed
             player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 260, 1)); // +20% movement
-            player.addPotionEffect(new PotionEffect(PotionEffectType.FAST_DIGGING, 260, 2)); // +40% attack speed
+            player.addPotionEffect(new PotionEffect(PotionEffectType.HASTE, 260, 2)); // FIXED: was FAST_DIGGING - +40% attack speed
             player.sendActionBar(Component.text("§fMortal Form: §7+40% AS, +20% MS"));
         } else {
             // Immortal Form: Damage Reduction & Damage
             player.addPotionEffect(new PotionEffect(PotionEffectType.RESISTANCE, 260, 1)); // 30% reduction
-            player.addPotionEffect(new PotionEffect(PotionEffectType.INCREASE_DAMAGE, 260, 0)); // +25% damage
+            player.addPotionEffect(new PotionEffect(PotionEffectType.STRENGTH, 260, 0)); // FIXED: was INCREASE_DAMAGE - +25% damage
             player.sendActionBar(Component.text("§eImmortal Form: §730% DMG reduction, +25% DMG"));
         }
     }
@@ -601,6 +600,7 @@ public class SuyousTranscendence extends Ability {
     private boolean checkSkillCooldown(Player player, String skill) {
         UUID playerId = player.getUniqueId();
         Map<String, Long> cooldowns = skillCooldowns.get(playerId);
+        if (cooldowns == null) return false;
         
         long now = System.currentTimeMillis();
         long lastUse = cooldowns.getOrDefault(skill, 0L);
@@ -661,12 +661,11 @@ public class SuyousTranscendence extends Ability {
         formStack.remove(playerId);
         skillCooldowns.remove(playerId);
         
-        // Remove buffs
+        // Remove buffs - FIXED: was INCREASE_DAMAGE and FAST_DIGGING
         player.removePotionEffect(PotionEffectType.SPEED);
-        player.removePotionEffect(PotionEffectType.STRENGTH);
+        player.removePotionEffect(PotionEffectType.STRENGTH); // FIXED: was INCREASE_DAMAGE
         player.removePotionEffect(PotionEffectType.RESISTANCE);
-        player.removePotionEffect(PotionEffectType.INCREASE_DAMAGE);
-        player.removePotionEffect(PotionEffectType.FAST_DIGGING);
+        player.removePotionEffect(PotionEffectType.HASTE); // FIXED: was FAST_DIGGING
         
         player.sendMessage(Component.text("§6Suyou's Transcendence fades..."));
     }
