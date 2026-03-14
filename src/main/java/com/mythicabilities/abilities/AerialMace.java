@@ -41,7 +41,7 @@ public class AerialMace extends Ability {
             Component.text("§7• Weapon enhances damage:"),
             Component.text("§7  §fMace: §e3x damage + explosion"),
             Component.text("§7  §fSword/Axe: §e2x damage + crits"),
-            Component.text("§7  §fBare hands: §e1.5x + ripple waves"),
+            Component.text("§7  §fBare hands: §e1.5x + shockwaves"),
             Component.text("§7• 10 seconds of aerial domination"),
             Component.text("§eCooldown: 25 seconds")
         ));
@@ -296,44 +296,50 @@ public class AerialMace extends Ability {
                 break;
                 
             case BARE:
-                // Ripple/shockwave effect
-                for (int i = 0; i < 3; i++) {
-                    double radius = 2 + i * 1.5;
-                    for (int angle = 0; angle < 360; angle += 20) {
-                        double rad = Math.toRadians(angle);
-                        double x = loc.getX() + radius * Math.cos(rad);
-                        double z = loc.getZ() + radius * Math.sin(rad);
-                        
-                        Location ringLoc = new Location(world, x, loc.getY() + 0.2, z);
-                        world.spawnParticle(Particle.RIPPLE, ringLoc, 1, 0, 0, 0, 0.1);
-                        world.spawnParticle(Particle.BUBBLE, ringLoc, 2, 0.2, 0.2, 0.2, 0);
-                    }
+                // FIXED: Replaced RIPPLE with CLOUD + END_ROD combination for shockwave effect
+                
+                // Main shockwave ring
+                for (int angle = 0; angle < 360; angle += 10) {
+                    double rad = Math.toRadians(angle);
+                    double x = loc.getX() + 2.5 * Math.cos(rad);
+                    double z = loc.getZ() + 2.5 * Math.sin(rad);
+                    
+                    Location ringLoc = new Location(world, x, loc.getY() + 0.5, z);
+                    world.spawnParticle(Particle.CLOUD, ringLoc, 2, 0.1, 0.1, 0.1, 0.02);
+                    world.spawnParticle(Particle.END_ROD, ringLoc, 1, 0.1, 0.1, 0.1, 0.01);
                 }
                 
-                // Shockwave rings
+                // Expanding rings animation
                 new BukkitRunnable() {
                     int wave = 0;
                     
                     @Override
                     public void run() {
-                        if (wave >= 3) {
+                        if (wave >= 4) {
                             this.cancel();
                             return;
                         }
                         
-                        double radius = 2 + wave * 2;
+                        double radius = 2 + wave * 1.5;
                         for (int angle = 0; angle < 360; angle += 15) {
                             double rad = Math.toRadians(angle);
                             double x = loc.getX() + radius * Math.cos(rad);
                             double z = loc.getZ() + radius * Math.sin(rad);
                             
                             Location waveLoc = new Location(world, x, loc.getY() + 0.3, z);
-                            world.spawnParticle(Particle.CLOUD, waveLoc, 2, 0.1, 0.1, 0.1, 0.02);
+                            
+                            // Wave particles
+                            world.spawnParticle(Particle.CLOUD, waveLoc, 3, 0.2, 0.1, 0.2, 0.02);
+                            world.spawnParticle(Particle.BUBBLE_POP, waveLoc, 2, 0.2, 0.1, 0.2, 0);
                         }
                         
                         wave++;
                     }
-                }.runTaskTimer(plugin, 0, 5);
+                }.runTaskTimer(plugin, 0, 3);
+                
+                // Center burst
+                world.spawnParticle(Particle.EXPLOSION, loc, 1);
+                world.spawnParticle(Particle.FIREWORK, loc, 20, 1, 0.5, 1, 0.1);
                 break;
                 
             default:
@@ -386,4 +392,4 @@ public class AerialMace extends Ability {
         // Manual trigger
         onTrigger(player);
     }
-  }
+}
