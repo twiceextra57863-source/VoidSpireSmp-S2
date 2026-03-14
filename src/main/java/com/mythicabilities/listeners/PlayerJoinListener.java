@@ -1,6 +1,7 @@
 package com.mythicabilities.listeners;
 
 import com.mythicabilities.MythicAbilities;
+import com.mythicabilities.abilities.Ability; // ADD THIS IMPORT
 import com.mythicabilities.gui.AbilitySpinGUI;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.title.Title;
@@ -42,13 +43,13 @@ public class PlayerJoinListener implements Listener {
             org.bukkit.Bukkit.getScheduler().runTaskLater(plugin, () -> {
                 // Open visual spin directly (not GUI)
                 AbilitySpinGUI spinGUI = new AbilitySpinGUI(plugin);
-                spinGUI.startVisualSpin(player);
+                spinGUI.startVisualSpin(player); // Now public
             }, 40); // 2 second delay
         } else {
             // Returning player
-            String ability = plugin.getAbilityManager().getPlayerAbility(player);
-            if (ability != null) {
-                Ability playerAbility = plugin.getAbilityManager().getAbility(ability);
+            String abilityName = plugin.getAbilityManager().getPlayerAbility(player);
+            if (abilityName != null) {
+                Ability playerAbility = plugin.getAbilityManager().getAbility(abilityName);
                 if (playerAbility != null) {
                     player.sendMessage(Component.text("§aYour ability: " + playerAbility.getDisplayName()));
                     
@@ -60,7 +61,7 @@ public class PlayerJoinListener implements Listener {
                 player.sendMessage(Component.text("§eYou don't have an ability! Spinning for you..."));
                 org.bukkit.Bukkit.getScheduler().runTaskLater(plugin, () -> {
                     AbilitySpinGUI spinGUI = new AbilitySpinGUI(plugin);
-                    spinGUI.startVisualSpin(player);
+                    spinGUI.startVisualSpin(player); // Now public
                 }, 20);
             }
         }
