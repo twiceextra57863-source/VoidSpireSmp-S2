@@ -3,6 +3,7 @@ package com.mythicabilities;
 import com.mythicabilities.abilities.*;
 import com.mythicabilities.admin.AdminCommand;
 import com.mythicabilities.admin.AdminPanelGUI;
+import com.mythicabilities.admin.ForceAbilityManager;
 import com.mythicabilities.admin.GiveAbilityCommand;
 import com.mythicabilities.admin.SMPManager;
 import com.mythicabilities.admin.WorldBorderManager;
@@ -23,6 +24,7 @@ public class MythicAbilities extends JavaPlugin {
     private SMPManager smpManager;
     private WorldBorderManager worldBorderManager;
     private AbilitySpinGUI spinGUI;
+    private ForceAbilityManager forceAbilityManager; // NEW
     
     @Override
     public void onEnable() {
@@ -32,12 +34,13 @@ public class MythicAbilities extends JavaPlugin {
         saveDefaultConfig();
         
         // Initialize managers
-        this.cooldownManager = new CooldownManager(this); // Pass plugin instance for cooldown display
+        this.cooldownManager = new CooldownManager(this);
         this.abilityManager = new AbilityManager();
         this.smpManager = new SMPManager(this);
         this.worldBorderManager = new WorldBorderManager(this);
         this.adminCommand = new AdminCommand(this);
         this.spinGUI = new AbilitySpinGUI(this);
+        this.forceAbilityManager = new ForceAbilityManager(this); // NEW
         
         // Register abilities
         registerAbilities();
@@ -47,7 +50,7 @@ public class MythicAbilities extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new AbilityUseListener(this), this);
         getServer().getPluginManager().registerEvents(new WorldBorderListener(this), this);
         getServer().getPluginManager().registerEvents(new AdminPanelGUI(this, adminCommand), this);
-        getServer().getPluginManager().registerEvents(spinGUI, this); // Register spin GUI listener
+        getServer().getPluginManager().registerEvents(spinGUI, this);
         
         // Register commands with tab completers
         getCommand("abilities").setExecutor(spinGUI);
@@ -87,8 +90,8 @@ public class MythicAbilities extends JavaPlugin {
     @Override
     public void onDisable() {
         // Clean up any active abilities
-        if (abilityManager != null) {
-            // Additional cleanup if needed
+        if (forceAbilityManager != null) {
+            forceAbilityManager.stopEvent(); // Stop any active event
         }
         
         getLogger().info("MythicAbilities has been disabled!");
@@ -120,5 +123,10 @@ public class MythicAbilities extends JavaPlugin {
     
     public AbilitySpinGUI getSpinGUI() {
         return spinGUI;
+    }
+    
+    // NEW Getter
+    public ForceAbilityManager getForceAbilityManager() {
+        return forceAbilityManager;
     }
 }
