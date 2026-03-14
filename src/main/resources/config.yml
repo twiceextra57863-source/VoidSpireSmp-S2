@@ -2,6 +2,15 @@
 # Version: 1.0.0
 # Minecraft Version: 1.21.11
 
+# Force Ability Give Settings
+force_ability:
+  enabled: true                    # true = first join par ability milegi, false = nahi milegi
+  give_on_first_join: true          # First join par ability dena hai?
+  give_on_event: false              # Event mode active hai?
+  event_timer: 0                    # Event timer in seconds (0 = disabled)
+  event_ability: "random"           # "random" ya specific ability name
+  event_broadcast: true              # Event ke baare me broadcast karna hai?
+  
 abilities:
   inferno_touch:
     enabled: true
@@ -14,20 +23,69 @@ abilities:
     cooldown: 20
     damage: 4
     freeze_duration: 5
+    
+  void_walker:
+    enabled: true
+    cooldown: 25
+    invisible_duration: 10
+    
+  mandela_effect:
+    enabled: true
+    cooldown: 40
+    duration: 12
+    
+  natures_wrath:
+    enabled: true
+    cooldown: 30
+    duration: 8
+    
+  aerial_mace:
+    enabled: true
+    cooldown: 25
+    smashes: 5
+    
+  kaguras_umbrella:
+    enabled: true
+    cooldown: 32
+    duration: 12
+    
+  suyous_transcendence:
+    enabled: true
+    cooldown: 35
+    duration: 12
+    
+  lings_shadow:
+    enabled: true
+    cooldown: 30
+    duration: 10
+    
+  first_of_stone:
+    enabled: true
+    cooldown: 35
+    duration: 15
 
-# Customization settings
-gui:
-  title: "§8✦ Ability Spin ✦"
-  spin_slot: 22
-  animation_speed: 2
+# Spin Settings
+spin:
+  duration: 60
+  frames: 60
+  freeze_player: true
+  celebration_particles: true
 
-# Particle settings
+# Cooldown Display
+cooldown:
+  style: "diamond"  # diamond, gradient, block, arrow
+  show_icon: true
+  update_interval: 20
+
+# Particle Settings
 particles:
   enabled: true
+  quality: "high"  # low, medium, high
   density: 1.0
-  quality: high
 
-# Cooldown display
-cooldown:
-  format: "§cCooldown: {time}s"
-  position: "actionbar"
+# World Border
+border:
+  start_size: 20
+  end_size: 20000
+  grace_period: 60
+  pvp_on_expand: true
