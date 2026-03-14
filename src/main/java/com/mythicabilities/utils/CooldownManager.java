@@ -1,5 +1,7 @@
 package com.mythicabilities.utils;
 
+import net.kyori.adventure.text.Component;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 import com.mythicabilities.MythicAbilities;
@@ -45,33 +47,114 @@ public class CooldownManager {
         new BukkitRunnable() {
             @Override
             public void run() {
-                // Update cooldown display for all players
-                org.bukkit.Bukkit.getOnlinePlayers().forEach(player -> {
+                for (Player player : Bukkit.getOnlinePlayers()) {
                     String abilityName = plugin.getAbilityManager().getPlayerAbility(player);
-                    if (abilityName != null && isOnCooldown(player, abilityName)) {
+                    if (abilityName == null) continue;
+                    
+                    if (isOnCooldown(player, abilityName)) {
                         long remaining = getRemainingCooldown(player, abilityName);
+                        int totalCooldown = getTotalCooldown(abilityName);
+                        int progress = (int) ((remaining * 20) / totalCooldown);
                         
-                        // Create cooldown bar
-                        int total = 30; // Max cooldown (adjust based on ability)
-                        int progress = (int) ((remaining * 20) / total);
+                        // OPTION 1: Diamond Luxe (Premium Look)
+                        String bar = createDiamondBar(progress, remaining);
                         
-                        StringBuilder bar = new StringBuilder("§8[");
-                        for (int i = 0; i < 20; i++) {
-                            if (i < progress) {
-                                bar.append("§c█");
-                            } else {
-                                bar.append("§7█");
-                            }
-                        }
-                        bar.append("§8]");
+                        // OPTION 2: Gradient Circles (Modern Look)
+                        // String bar = createGradientCircleBar(progress, remaining);
                         
-                        // Send action bar
-                        player.sendActionBar(Component.text(
-                            "§cCooldown: §e" + remaining + "s " + bar.toString()
-                        ));
+                        // OPTION 3: Block Style (Classic Look)
+                        // String bar = createBlockBar(progress, remaining);
+                        
+                        player.sendActionBar(Component.text("§d" + getAbilityIcon(abilityName) + " §7" + bar + " §e" + remaining + "s"));
+                        
+                    } else {
+                        // Show ready status
+                        player.sendActionBar(Component.text("§a" + getAbilityIcon(abilityName) + " §7[§a■■■■■■■■■■■■■■■■■■■■§7] §aREADY!"));
                     }
-                });
+                }
             }
-        }.runTaskTimer(plugin, 0, 20); // Update every second
+        }.runTaskTimer(plugin, 0, 20);
+    }
+    
+    private String createDiamondBar(int progress, long remaining) {
+        StringBuilder bar = new StringBuilder("§8[");
+        for (int i = 0; i < 20; i++) {
+            if (i < progress) {
+                // Gradient diamonds based on remaining time
+                if (remaining > 20) bar.append("§a♦");
+                else if (remaining > 10) bar.append("§e♦");
+                else if (remaining > 5) bar.append("§6♦");
+                else bar.append("§c♦");
+            } else {
+                bar.append("§8◇");
+            }
+        }
+        bar.append("§8]");
+        return bar.toString();
+    }
+    
+    private String createGradientCircleBar(int progress, long remaining) {
+        StringBuilder bar = new StringBuilder("§8[");
+        String[] colors = {"§a", "§b", "§d", "§c"}; // Green → Aqua → Pink → Red
+        for (int i = 0; i < 20; i++) {
+            if (i < progress) {
+                int colorIndex = Math.min(colors.length - 1, (i * colors.length) / 20);
+                bar.append(colors[colorIndex] + "●");
+            } else {
+                bar.append("§7○");
+            }
+        }
+        bar.append("§8]");
+        return bar.toString();
+    }
+    
+    private String createBlockBar(int progress, long remaining) {
+        StringBuilder bar = new StringBuilder("§8[");
+        for (int i = 0; i < 20; i++) {
+            if (i < progress) {
+                if (remaining > 20) bar.append("§a█");
+                else if (remaining > 10) bar.append("§e█");
+                else if (remaining > 5) bar.append("§6█");
+                else bar.append("§c█");
+            } else {
+                bar.append("§7░");
+            }
+        }
+        bar.append("§8]");
+        return bar.toString();
+    }
+    
+    private int getTotalCooldown(String abilityName) {
+        // Return cooldown based on ability
+        switch (abilityName) {
+            case "inferno_touch": return 30;
+            case "frost_walker": return 20;
+            case "void_walker": return 25;
+            case "mandela_effect": return 40;
+            case "natures_wrath": return 30;
+            case "aerial_mace": return 25;
+            case "kaguras_umbrella": return 32;
+            case "suyous_transcendence": return 35;
+            case "lings_shadow": return 30;
+            case "first_of_stone": return 35;
+            default: return 30;
+        }
+    }
+    
+    private String getAbilityIcon(String abilityName) {
+        // Return icon for each ability
+        switch (abilityName) {
+            case "inferno_touch": return "§c♨"; // Fire icon
+            case "frost_walker": return "§b❄"; // Snowflake
+            case "void_walker": return "§5👁"; // Eye
+            case "mandela_effect": return "§d🌀"; // Cyclone
+            case "natures_wrath": return "§2🌿"; // Leaf
+            case "aerial_mace": return "§e⚡"; // Lightning
+            case "kaguras_umbrella": return "§d☂"; // Umbrella
+            case "suyous_transcendence": return "§6⚔"; // Crossed swords
+            case "lings_shadow": return "§5🗡"; // Dagger
+            case "first_of_stone": return "§7⛰"; // Mountain
+            default: return "§f✦";
+        }
     }
 }
