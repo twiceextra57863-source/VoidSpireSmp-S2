@@ -143,7 +143,7 @@ public class VoidWalker extends Ability {
                 // Shadow particles around player
                 Location loc = player.getLocation();
                 player.getWorld().spawnParticle(Particle.SMOKE, loc.clone().add(0, 1, 0), 5, 0.3, 0.5, 0.3, 0.02);
-                player.getWorld().spawnParticle(Particle.SPELL_WITCH, loc.clone().add(0, 1, 0), 3, 0.3, 0.5, 0.3, 0);
+                player.getWorld().spawnParticle(Particle.ENCHANT, loc.clone().add(0, 1, 0), 3, 0.3, 0.5, 0.3, 0);
                 
                 // Occasionally show shadow figure
                 if (ticks % 20 == 0) {
