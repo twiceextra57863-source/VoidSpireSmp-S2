@@ -9,22 +9,25 @@ commands:
   abilities:
     description: Open abilities menu
     usage: /abilities
+    aliases: [ab]
     
   smp:
     description: Main SMP control command
-    usage: /smp <start|stop|status|set|border|pvp|grace|help>
+    usage: /smp <start|stop|status|set|border|pvp|grace|event|force|help>
     permission: mythicabilities.admin
+    aliases: [smpadmin, smpcontrol]
     
   admin:
     description: Admin control panel
     usage: /admin
     permission: mythicabilities.admin
+    aliases: [panel, control]
     
   giveability:
     description: Give ability to player
     usage: /giveability <player> <ability> or /giveability <ability> (self)
     permission: mythicabilities.admin
-    aliases: [ga, giveabil]
+    aliases: [ga, giveabil, gabi]
 
 permissions:
   mythicabilities.use:
@@ -36,3 +39,11 @@ permissions:
     default: op
     children:
       mythicabilities.use: true
+      
+  mythicabilities.bypass.cooldown:
+    description: Bypass ability cooldowns
+    default: op
+    
+  mythicabilities.bypass.combo:
+    description: Abilities always ready
+    default: op
