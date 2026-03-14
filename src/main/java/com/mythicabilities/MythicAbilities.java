@@ -49,11 +49,19 @@ public class MythicAbilities extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new AdminPanelGUI(this, adminCommand), this);
         getServer().getPluginManager().registerEvents(spinGUI, this); // Register spin GUI listener
         
-        // Register commands
+        // Register commands with tab completers
         getCommand("abilities").setExecutor(spinGUI);
+        
+        // Admin command with tab completer
         getCommand("smp").setExecutor(adminCommand);
+        getCommand("smp").setTabCompleter(adminCommand);
+        
         getCommand("admin").setExecutor(adminCommand);
-        getCommand("giveability").setExecutor(new GiveAbilityCommand(this));
+        
+        // GiveAbility command with tab completer
+        GiveAbilityCommand giveAbilityCommand = new GiveAbilityCommand(this);
+        getCommand("giveability").setExecutor(giveAbilityCommand);
+        getCommand("giveability").setTabCompleter(giveAbilityCommand);
         
         getLogger().info("MythicAbilities has been enabled successfully!");
         getLogger().info("Supporting Minecraft 1.21.11 with latest features!");
