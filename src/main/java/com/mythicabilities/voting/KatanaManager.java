@@ -72,6 +72,26 @@ public class KatanaManager {
         long timeLeft = (cooldown + COOLDOWN_24H) - System.currentTimeMillis();
         return timeLeft <= 0;
     }
+
+    public ItemStack createKatanaWithCustomTexture(String katanaName, Player owner) {
+    ItemStack katana = new ItemStack(Material.NETHERITE_SWORD);
+    ItemMeta meta = katana.getItemMeta();
+    
+    // Create namespace key (1.21.11 compatible)
+    String textureKey = katanaName.toLowerCase()
+        .replace(" ", "_")
+        .replace("'", "");
+    
+    NamespacedKey modelKey = new NamespacedKey("mythickatanas", textureKey);
+    meta.setItemModel(modelKey);
+    
+    // Add display name etc.
+    meta.displayName(Component.text(getKatanaDisplayName(katanaName)));
+    
+    katana.setItemMeta(meta);
+    return katana;
+        
+    }
     
     // ============= KATANA CREATION =============
     
