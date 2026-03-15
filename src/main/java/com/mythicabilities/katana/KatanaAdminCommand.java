@@ -8,12 +8,9 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemStack; // ADD THIS IMPORT
-import org.bukkit.inventory.meta.ItemMeta; // ADD THIS IMPORT
-import org.bukkit.Material; // ADD THIS IMPORT
+import org.bukkit.inventory.ItemStack;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 public class KatanaAdminCommand implements CommandExecutor, TabCompleter {
     
@@ -27,13 +24,10 @@ public class KatanaAdminCommand implements CommandExecutor, TabCompleter {
         this.spinGUI = new KatanaSpinGUI(plugin);
     }
     
-    // ... rest of the class remains the same ...
-}
-    
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         
-        if (!sender.hasPermission("mythicabilities.admin")) {
+        if (!sender.hasPermission("mythicabilities.katana.admin")) {
             sender.sendMessage("§cYou don't have permission!");
             return true;
         }
@@ -47,7 +41,7 @@ public class KatanaAdminCommand implements CommandExecutor, TabCompleter {
             // ============= GIVE COMMANDS =============
             case "give":
                 if (args.length < 2) {
-                    sender.sendMessage("§cUsage: /katana give <player> [katana]");
+                    sender.sendMessage("§cUsage: /katanadmin give <player> [katana]");
                     return true;
                 }
                 handleGive(sender, args);
@@ -55,7 +49,7 @@ public class KatanaAdminCommand implements CommandExecutor, TabCompleter {
                 
             case "giveall":
                 if (args.length < 2) {
-                    sender.sendMessage("§cUsage: /katana giveall [katana]");
+                    sender.sendMessage("§cUsage: /katanadmin giveall [katana]");
                     return true;
                 }
                 handleGiveAll(sender, args);
@@ -63,7 +57,7 @@ public class KatanaAdminCommand implements CommandExecutor, TabCompleter {
                 
             case "giverandom":
                 if (args.length < 2) {
-                    sender.sendMessage("§cUsage: /katana giverandom <player>");
+                    sender.sendMessage("§cUsage: /katanadmin giverandom <player>");
                     return true;
                 }
                 handleGiveRandom(sender, args);
@@ -76,7 +70,7 @@ public class KatanaAdminCommand implements CommandExecutor, TabCompleter {
             // ============= SPIN COMMANDS =============
             case "spin":
                 if (args.length < 2) {
-                    sender.sendMessage("§cUsage: /katana spin <player>");
+                    sender.sendMessage("§cUsage: /katanadmin spin <player>");
                     return true;
                 }
                 handleSpin(sender, args);
@@ -93,7 +87,7 @@ public class KatanaAdminCommand implements CommandExecutor, TabCompleter {
                 
             case "info":
                 if (args.length < 2) {
-                    sender.sendMessage("§cUsage: /katana info <player>");
+                    sender.sendMessage("§cUsage: /katanadmin info <player>");
                     return true;
                 }
                 handleInfo(sender, args);
@@ -110,7 +104,7 @@ public class KatanaAdminCommand implements CommandExecutor, TabCompleter {
             // ============= REMOVE COMMANDS =============
             case "remove":
                 if (args.length < 2) {
-                    sender.sendMessage("§cUsage: /katana remove <player>");
+                    sender.sendMessage("§cUsage: /katanadmin remove <player>");
                     return true;
                 }
                 handleRemove(sender, args);
@@ -145,13 +139,22 @@ public class KatanaAdminCommand implements CommandExecutor, TabCompleter {
         if (args.length >= 3) {
             // Give specific katana
             String katanaName = args[2];
-            if (!KatanaData.isValidKatana(katanaName)) {
-                sender.sendMessage("§cInvalid katana name! Use /katana list");
+            // Handle multi-word katana names
+            if (args.length > 3) {
+                StringBuilder sb = new StringBuilder();
+                for (int i = 2; i < args.length; i++) {
+                    sb.append(args[i]).append(" ");
+                }
+                katanaName = sb.toString().trim();
+            }
+            
+            if (!katanaManager.isValidKatana(katanaName)) {
+                sender.sendMessage("§cInvalid katana name! Use /katanadmin list");
                 return;
             }
             
             if (katanaManager.giveKatanaToPlayer(target, katanaName)) {
-                sender.sendMessage("§a✅ Gave " + KatanaData.getDisplayName(katanaName) + " to " + target.getName());
+                sender.sendMessage("§a✅ Gave " + katanaManager.getDisplayName(katanaName) + " to " + target.getName());
             }
         } else {
             // Give random katana
@@ -163,13 +166,22 @@ public class KatanaAdminCommand implements CommandExecutor, TabCompleter {
     private void handleGiveAll(CommandSender sender, String[] args) {
         if (args.length >= 2) {
             String katanaName = args[1];
-            if (!KatanaData.isValidKatana(katanaName)) {
-                sender.sendMessage("§cInvalid katana name! Use /katana list");
+            // Handle multi-word katana names
+            if (args.length > 2) {
+                StringBuilder sb = new StringBuilder();
+                for (int i = 1; i < args.length; i++) {
+                    sb.append(args[i]).append(" ");
+                }
+                katanaName = sb.toString().trim();
+            }
+            
+            if (!katanaManager.isValidKatana(katanaName)) {
+                sender.sendMessage("§cInvalid katana name! Use /katanadmin list");
                 return;
             }
             
             katanaManager.giveKatanaToAll(katanaName);
-            sender.sendMessage("§a✅ Gave " + KatanaData.getDisplayName(katanaName) + " to all players");
+            sender.sendMessage("§a✅ Gave " + katanaManager.getDisplayName(katanaName) + " to all players");
         }
     }
     
@@ -196,28 +208,36 @@ public class KatanaAdminCommand implements CommandExecutor, TabCompleter {
             return;
         }
         
-        spinGUI.startVisualSpin(target, true); // true = admin spin
-        sender.sendMessage("§a✅ Started spin for " + target.getName());
+        if (spinGUI.isSpinning(target)) {
+            sender.sendMessage("§c" + target.getName() + " is already spinning!");
+            return;
+        }
+        
+        spinGUI.startVisualSpin(target, true);
+        sender.sendMessage("§a✅ Started cinematic spin for " + target.getName());
     }
     
     private void handleSpinAll(CommandSender sender) {
+        int count = 0;
         for (Player p : Bukkit.getOnlinePlayers()) {
-            spinGUI.startVisualSpin(p, true);
+            if (!spinGUI.isSpinning(p)) {
+                spinGUI.startVisualSpin(p, true);
+                count++;
+            }
         }
-        sender.sendMessage("§a✅ Started spin for all players");
+        sender.sendMessage("§a✅ Started cinematic spin for " + count + " players");
     }
     
     private void handleList(CommandSender sender) {
-        sender.sendMessage("§6§l╔═══════════ AVAILABLE KATANAS ═══════════╗");
+        sender.sendMessage("§6§l╔═══════════ 16 LEGENDARY KATANAS ═══════════╗");
         
-        List<String> katanas = KatanaData.getAllKatanaNames();
-        for (int i = 0; i < katanas.size(); i++) {
-            String katana = katanas.get(i);
-            String display = KatanaData.getDisplayName(katana);
+        String[] katanas = katanaManager.getKatanaNames();
+        for (int i = 0; i < katanas.length; i++) {
+            String display = katanaManager.getDisplayName(katanas[i]);
             sender.sendMessage("§6║ §f" + String.format("%2d", (i+1)) + ". " + display);
         }
         
-        sender.sendMessage("§6╚═══════════════════════════════════════════╝");
+        sender.sendMessage("§6╚══════════════════════════════════════════════╝");
     }
     
     private void handleInfo(CommandSender sender, String[] args) {
@@ -227,30 +247,57 @@ public class KatanaAdminCommand implements CommandExecutor, TabCompleter {
             return;
         }
         
-        KatanaData.KatanaInfo info = KatanaData.getPlayerKatana(target);
+        // Find katana in inventory
+        ItemStack katana = null;
+        for (ItemStack item : target.getInventory().getContents()) {
+            if (item != null && katanaManager.isBoundKatana(item)) {
+                katana = item;
+                break;
+            }
+        }
         
         sender.sendMessage("§6§l╔═══════════ PLAYER KATANA INFO ═══════════╗");
         sender.sendMessage("§6║ §ePlayer: §f" + target.getName());
         
-        if (info != null) {
-            sender.sendMessage("§6║ §eKatana: " + info.displayName);
-            sender.sendMessage("§6║ §eModel: §f" + info.modelData);
-            sender.sendMessage("§6║ §eObtained: §f" + new Date(info.obtainedTime));
+        if (katana != null) {
+            String katanaName = katanaManager.getKatanaName(katana);
+            UUID ownerId = katanaManager.getKatanaOwner(katana);
+            Player owner = ownerId != null ? Bukkit.getPlayer(ownerId) : null;
+            
+            sender.sendMessage("§6║ §eKatana: " + katanaManager.getDisplayName(katanaName));
+            if (owner != null) {
+                sender.sendMessage("§6║ §eBound to: §f" + owner.getName());
+            }
+            sender.sendMessage("§6║ §eModel: §f" + katana.getItemMeta().getCustomModelData());
         } else {
-            sender.sendMessage("§6║ §cNo katana found!");
+            sender.sendMessage("§6║ §cNo katana found in inventory!");
         }
         
         sender.sendMessage("§6╚═══════════════════════════════════════════╝");
     }
     
     private void handleCheck(Player player) {
-        KatanaData.KatanaInfo info = KatanaData.getPlayerKatana(player);
+        // Find katana in inventory
+        ItemStack katana = null;
+        for (ItemStack item : player.getInventory().getContents()) {
+            if (item != null && katanaManager.isBoundKatana(item)) {
+                katana = item;
+                break;
+            }
+        }
         
         player.sendMessage("§6§l╔═══════════ YOUR KATANA ═══════════╗");
-        if (info != null) {
-            player.sendMessage("§6║ " + info.displayName);
-            player.sendMessage("§6║ §eModel: §f" + info.modelData);
-            player.sendMessage("§6║ §eObtained: §f" + new Date(info.obtainedTime));
+        if (katana != null) {
+            String katanaName = katanaManager.getKatanaName(katana);
+            UUID ownerId = katanaManager.getKatanaOwner(katana);
+            
+            player.sendMessage("§6║ " + katanaManager.getDisplayName(katanaName));
+            if (ownerId != null && ownerId.equals(player.getUniqueId())) {
+                player.sendMessage("§6║ §a✓ Bound to you");
+            } else if (ownerId != null) {
+                Player owner = Bukkit.getPlayer(ownerId);
+                player.sendMessage("§6║ §c✗ Bound to: " + (owner != null ? owner.getName() : "unknown"));
+            }
         } else {
             player.sendMessage("§6║ §cYou don't have a katana!");
         }
@@ -264,65 +311,48 @@ public class KatanaAdminCommand implements CommandExecutor, TabCompleter {
             return;
         }
         
-        // Remove from inventory
-        for (ItemStack item : target.getInventory().getContents()) {
-            if (item != null && katanaManager.isBoundKatana(item)) {
-                target.getInventory().remove(item);
-            }
-        }
-        
-        // Remove from data
-        KatanaData.removePlayerKatana(target);
-        
+        katanaManager.removeKatanaFromPlayer(target);
         sender.sendMessage("§c✅ Removed katana from " + target.getName());
         target.sendMessage("§cYour katana has been removed by an admin!");
     }
     
     private void handleRemoveAll(CommandSender sender) {
-        for (Player p : Bukkit.getOnlinePlayers()) {
-            for (ItemStack item : p.getInventory().getContents()) {
-                if (item != null && katanaManager.isBoundKatana(item)) {
-                    p.getInventory().remove(item);
-                }
-            }
-            KatanaData.removePlayerKatana(p);
-        }
-        
+        katanaManager.removeAllKatanas();
         Bukkit.broadcast(Component.text("§c§l✦ All katanas have been removed by an admin! ✦"));
         sender.sendMessage("§c✅ Removed all katanas");
     }
     
     private void handleReload(CommandSender sender) {
-        // Reload configuration
+        // Reload configuration if needed
         plugin.reloadConfig();
         sender.sendMessage("§a✅ Katana system reloaded!");
     }
     
     private void sendHelp(CommandSender sender) {
         sender.sendMessage("§6§l╔═══════════ KATANA ADMIN COMMANDS ═══════════╗");
-        sender.sendMessage("§6║ §e/katana give <player> [katana]");
+        sender.sendMessage("§6║ §e/katanadmin give <player> [katana]");
         sender.sendMessage("§6║ §7  - Give specific/random katana");
-        sender.sendMessage("§6║ §e/katana giveall [katana]");
+        sender.sendMessage("§6║ §e/katanadmin giveall [katana]");
         sender.sendMessage("§6║ §7  - Give katana to all players");
-        sender.sendMessage("§6║ §e/katana giverandom <player>");
+        sender.sendMessage("§6║ §e/katanadmin giverandom <player>");
         sender.sendMessage("§6║ §7  - Give random katana");
-        sender.sendMessage("§6║ §e/katana giverandomall");
+        sender.sendMessage("§6║ §e/katanadmin giverandomall");
         sender.sendMessage("§6║ §7  - Give random to all");
-        sender.sendMessage("§6║ §e/katana spin <player>");
-        sender.sendMessage("§6║ §7  - Start visual spin");
-        sender.sendMessage("§6║ §e/katana spinall");
+        sender.sendMessage("§6║ §e/katanadmin spin <player>");
+        sender.sendMessage("§6║ §7  - Start cinematic spin");
+        sender.sendMessage("§6║ §e/katanadmin spinall");
         sender.sendMessage("§6║ §7  - Spin for all players");
-        sender.sendMessage("§6║ §e/katana list");
+        sender.sendMessage("§6║ §e/katanadmin list");
         sender.sendMessage("§6║ §7  - List all katanas");
-        sender.sendMessage("§6║ §e/katana info <player>");
+        sender.sendMessage("§6║ §e/katanadmin info <player>");
         sender.sendMessage("§6║ §7  - Check player's katana");
-        sender.sendMessage("§6║ §e/katana check");
+        sender.sendMessage("§6║ §e/katanadmin check");
         sender.sendMessage("§6║ §7  - Check your katana");
-        sender.sendMessage("§6║ §e/katana remove <player>");
+        sender.sendMessage("§6║ §e/katanadmin remove <player>");
         sender.sendMessage("§6║ §7  - Remove katana from player");
-        sender.sendMessage("§6║ §e/katana removeall");
+        sender.sendMessage("§6║ §e/katanadmin removeall");
         sender.sendMessage("§6║ §7  - Remove all katanas");
-        sender.sendMessage("§6║ §e/katana reload");
+        sender.sendMessage("§6║ §e/katanadmin reload");
         sender.sendMessage("§6║ §7  - Reload configuration");
         sender.sendMessage("§6╚══════════════════════════════════════════════╝");
     }
@@ -331,7 +361,7 @@ public class KatanaAdminCommand implements CommandExecutor, TabCompleter {
     public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
         List<String> completions = new ArrayList<>();
         
-        if (!sender.hasPermission("mythicabilities.admin")) {
+        if (!sender.hasPermission("mythicabilities.katana.admin")) {
             return completions;
         }
         
@@ -355,7 +385,8 @@ public class KatanaAdminCommand implements CommandExecutor, TabCompleter {
             if (args[0].equalsIgnoreCase("give") || 
                 args[0].equalsIgnoreCase("info") || 
                 args[0].equalsIgnoreCase("remove") ||
-                args[0].equalsIgnoreCase("spin")) {
+                args[0].equalsIgnoreCase("spin") ||
+                args[0].equalsIgnoreCase("giverandom")) {
                 
                 // Suggest player names
                 for (Player p : Bukkit.getOnlinePlayers()) {
@@ -366,7 +397,7 @@ public class KatanaAdminCommand implements CommandExecutor, TabCompleter {
                 
             } else if (args[0].equalsIgnoreCase("giveall")) {
                 // Suggest katana names
-                for (String katana : KatanaData.getAllKatanaNames()) {
+                for (String katana : katanaManager.getKatanaNames()) {
                     if (katana.toLowerCase().startsWith(partial)) {
                         completions.add(katana);
                     }
@@ -377,7 +408,7 @@ public class KatanaAdminCommand implements CommandExecutor, TabCompleter {
             String partial = args[2].toLowerCase();
             
             // Suggest katana names
-            for (String katana : KatanaData.getAllKatanaNames()) {
+            for (String katana : katanaManager.getKatanaNames()) {
                 if (katana.toLowerCase().startsWith(partial)) {
                     completions.add(katana);
                 }
@@ -386,4 +417,4 @@ public class KatanaAdminCommand implements CommandExecutor, TabCompleter {
         
         return completions;
     }
-          }
+}
