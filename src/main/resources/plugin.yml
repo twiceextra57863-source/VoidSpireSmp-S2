@@ -3,7 +3,7 @@ version: 1.0.0
 main: com.mythicabilities.MythicAbilities
 api-version: 1.21
 author: YourName
-description: Ultimate abilities plugin with voting system, 15 legendary katanas, dynamic scoreboard, and complete admin katana control
+description: Ultimate abilities plugin with voting system, 16 legendary katanas, dynamic scoreboard, and complete admin katana control with cinematic spins
 
 commands:
   # ============= ABILITY COMMANDS =============
@@ -67,10 +67,10 @@ commands:
     
   # ============= KATANA ADMIN SYSTEM =============
   katanadmin:
-    description: Complete katana admin control system
+    description: Complete katana admin control system with cinematic spins
     usage: /katanadmin <give|giveall|giverandom|giverandomall|spin|spinall|list|info|check|remove|removeall|reload>
     permission: mythicabilities.katana.admin
-    aliases: [kadmin, katanaadmin, ka, bladeadmin]
+    aliases: [kadmin, katanaadmin, ka, bladeadmin, kspawn]
 
 permissions:
   # ============= PLAYER PERMISSIONS =============
@@ -99,42 +99,9 @@ permissions:
     description: Leader specific commands
     default: false
     
-  mythicabilities.leader.promote:
-    description: Can promote members
-    default: false
-    
-  mythicabilities.leader.kick:
-    description: Can kick members
-    default: false
-    
-  mythicabilities.leader.disband:
-    description: Can disband team
-    default: false
-    
   # ============= KATANA ADMIN PERMISSIONS =============
   mythicabilities.katana.admin:
     description: Full access to katana admin commands
-    default: op
-    children:
-      mythicabilities.katana.give: true
-      mythicabilities.katana.remove: true
-      mythicabilities.katana.spin: true
-      mythicabilities.katana.reload: true
-      
-  mythicabilities.katana.give:
-    description: Can give katanas to players
-    default: op
-    
-  mythicabilities.katana.remove:
-    description: Can remove katanas from players
-    default: op
-    
-  mythicabilities.katana.spin:
-    description: Can start katana spins
-    default: op
-    
-  mythicabilities.katana.reload:
-    description: Can reload katana config
     default: op
     
   # ============= ADMIN PERMISSIONS =============
