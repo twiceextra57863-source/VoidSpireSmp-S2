@@ -327,8 +327,8 @@ public class AbilitySpinGUI implements Listener, org.bukkit.command.CommandExecu
                 break;
         }
         
-        // Always spawn some basic particles
-        world.spawnParticle(Particle.SPELL, center, 5, 0.3, 0.3, 0.3, 1);
+        // Always spawn some basic particles - FIXED: Replaced SPELL with ENCHANT
+        world.spawnParticle(Particle.ENCHANT, center, 5, 0.3, 0.3, 0.3, 0);
     }
     
     private void playMusicalSound(Player player, int phase, int frame) {
