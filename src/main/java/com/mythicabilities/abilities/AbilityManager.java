@@ -11,7 +11,6 @@ public class AbilityManager {
     private final Map<UUID, String> playerAbilities = new HashMap<>();
     private final Map<UUID, Integer> comboCount = new HashMap<>();
     
-    // Constructor with NO parameters
     public AbilityManager() {
         // Empty constructor
     }
@@ -26,6 +25,8 @@ public class AbilityManager {
     
     public void setPlayerAbility(Player player, String abilityName) {
         playerAbilities.put(player.getUniqueId(), abilityName);
+        // Reset combo when new ability assigned
+        comboCount.remove(player.getUniqueId());
     }
     
     public String getPlayerAbility(Player player) {
@@ -33,8 +34,12 @@ public class AbilityManager {
     }
     
     public void addCombo(Player player) {
-        int count = comboCount.getOrDefault(player.getUniqueId(), 0) + 1;
-        comboCount.put(player.getUniqueId(), count);
+        UUID playerId = player.getUniqueId();
+        int currentCombo = comboCount.getOrDefault(playerId, 0);
+        comboCount.put(playerId, currentCombo + 1);
+        
+        // Debug - remove in production
+        player.sendMessage("§8[Debug] Combo: " + (currentCombo + 1));
     }
     
     public int getCombo(Player player) {
