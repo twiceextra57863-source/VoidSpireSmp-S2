@@ -22,23 +22,7 @@ public class KatanaCommand implements CommandExecutor {
         }
         
         if (args.length == 0 || args[0].equalsIgnoreCase("list")) {
-            player.sendMessage("§6§l╔═══════════ 15 LEGENDARY KATANAS ═══════════╗");
-            player.sendMessage("§6║  §b1. Storm Breaker     (Lightning)        §6║");
-            player.sendMessage("§6║  §c2. Flame Dragon      (Fire)             §6║");
-            player.sendMessage("§6║  §83. Shadow Dancer     (Dark)             §6║");
-            player.sendMessage("§6║  §a4. Wind Cutter       (Wind)             §6║");
-            player.sendMessage("§6║  §65. Earth Shaker      (Earth)            §6║");
-            player.sendMessage("§6║  §36. Frost Bite        (Ice)              §6║");
-            player.sendMessage("§6║  §57. Void Walker       (Void)             §6║");
-            player.sendMessage("§6║  §e8. Sun Slash         (Light)            §6║");
-            player.sendMessage("§6║  §29. Nature's Fang     (Nature)           §6║");
-            player.sendMessage("§6║  §710. Stone Edge        (Rock)             §6║");
-            player.sendMessage("§6║  §911. Wave Splitter     (Water)            §6║");
-            player.sendMessage("§6║  §412. Blood Moon        (Blood)            §6║");
-            player.sendMessage("§6║  §d13. Soul Reaper       (Soul)             §6║");
-            player.sendMessage("§6║  §614. Thunder God       (Thunder)          §6║");
-            player.sendMessage("§6║  §b15. Celestial Blade   (Divine)           §6║");
-            player.sendMessage("§6╚══════════════════════════════════════════════╝");
+            showKatanaList(player);
             return true;
         }
         
@@ -51,8 +35,9 @@ public class KatanaCommand implements CommandExecutor {
             
             player.sendMessage("§6§l╔═══════════ YOUR KATANA ═══════════╗");
             player.sendMessage("§6║ §eType: " + team.getKatanaType());
-            player.sendMessage("§6║ §eDeaths: §c" + plugin.getKatanaManager().getDeathCount(player) + "§e/3");
-            long cooldown = plugin.getKatanaManager().getTeamCooldown(player);
+            // Use votingKatanaManager instead of katanaAdminManager
+            player.sendMessage("§6║ §eDeaths: §c" + plugin.getVotingKatanaManager().getDeathCount(player) + "§e/3");
+            long cooldown = plugin.getVotingKatanaManager().getTeamCooldown(player);
             if (cooldown > 0) {
                 player.sendMessage("§6║ §eCooldown: §c" + cooldown + " hours");
             }
@@ -61,5 +46,25 @@ public class KatanaCommand implements CommandExecutor {
         }
         
         return true;
+    }
+    
+    private void showKatanaList(Player player) {
+        player.sendMessage("§6§l╔═══════════ 15 LEGENDARY KATANAS ═══════════╗");
+        player.sendMessage("§6║  §b1. Storm Breaker     (Lightning)        §6║");
+        player.sendMessage("§6║  §c2. Flame Dragon      (Fire)             §6║");
+        player.sendMessage("§6║  §83. Shadow Dancer     (Dark)             §6║");
+        player.sendMessage("§6║  §a4. Wind Cutter       (Wind)             §6║");
+        player.sendMessage("§6║  §65. Earth Shaker      (Earth)            §6║");
+        player.sendMessage("§6║  §36. Frost Bite        (Ice)              §6║");
+        player.sendMessage("§6║  §57. Void Walker       (Void)             §6║");
+        player.sendMessage("§6║  §e8. Sun Slash         (Light)            §6║");
+        player.sendMessage("§6║  §29. Nature's Fang     (Nature)           §6║");
+        player.sendMessage("§6║  §710. Stone Edge        (Rock)             §6║");
+        player.sendMessage("§6║  §911. Wave Splitter     (Water)            §6║");
+        player.sendMessage("§6║  §412. Blood Moon        (Blood)            §6║");
+        player.sendMessage("§6║  §d13. Soul Reaper       (Soul)             §6║");
+        player.sendMessage("§6║  §614. Thunder God       (Thunder)          §6║");
+        player.sendMessage("§6║  §b15. Celestial Blade   (Divine)           §6║");
+        player.sendMessage("§6╚══════════════════════════════════════════════╝");
     }
 }
