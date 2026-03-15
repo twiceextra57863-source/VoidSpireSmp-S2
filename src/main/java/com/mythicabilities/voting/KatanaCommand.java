@@ -51,7 +51,7 @@ public class KatanaCommand implements CommandExecutor {
             
             player.sendMessage("§6§l╔═══════════ YOUR KATANA ═══════════╗");
             player.sendMessage("§6║ §eType: " + team.getKatanaType());
-            player.sendMessage("§6║ §eDeaths: " + plugin.getKatanaManager().getDeathCount(player) + "/3");
+            player.sendMessage("§6║ §eDeaths: §c" + plugin.getKatanaManager().getDeathCount(player) + "§e/3");
             long cooldown = plugin.getKatanaManager().getTeamCooldown(player);
             if (cooldown > 0) {
                 player.sendMessage("§6║ §eCooldown: §c" + cooldown + " hours");
