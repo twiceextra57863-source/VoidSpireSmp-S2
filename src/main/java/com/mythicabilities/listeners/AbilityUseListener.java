@@ -3,13 +3,14 @@ package com.mythicabilities.listeners;
 import com.mythicabilities.MythicAbilities;
 import com.mythicabilities.abilities.Ability;
 import net.kyori.adventure.text.Component;
+import org.bukkit.Sound;
+import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
-import org.bukkit.event.block.Action;
-import org.bukkit.Sound;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
-import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.entity.EntityDamageEvent;
 
 public class AbilityUseListener implements Listener {
     
@@ -19,78 +20,81 @@ public class AbilityUseListener implements Listener {
         this.plugin = plugin;
     }
     
-    @EventHandler
-    public void onPlayerDamage(EntityDamageByEntityEvent event) {
+    @EventHandler(priority = EventPriority.HIGH)
+    public void onEntityDamageByEntity(EntityDamageByEntityEvent event) {
+        // Check if damager is player
         if (!(event.getDamager() instanceof Player player)) return;
-        if (!(event.getEntity() instanceof Player target)) return;
         
+        // Check if entity is LivingEntity (player or mob)
+        if (!(event.getEntity() instanceof LivingEntity target)) return;
+        
+        // Get player's ability
         String abilityName = plugin.getAbilityManager().getPlayerAbility(player);
-        if (abilityName == null) return;
+        if (abilityName == null) {
+            // Player has no ability - still track combos for debugging
+            plugin.getAbilityManager().addCombo(player);
+            int combo = plugin.getAbilityManager().getCombo(player);
+            player.sendActionBar(Component.text("§7Combo: §e" + combo + " §7(No ability)"));
+            return;
+        }
         
         Ability ability = plugin.getAbilityManager().getAbility(abilityName);
         if (ability == null) return;
         
-        // Cancel damage from abilities
-        if (event.getDamage() > 0) {
-            // Check if it's ability damage
-            if (event.getCause() == EntityDamageByEntityEvent.DamageCause.CUSTOM ||
-                event.getCause() == EntityDamageByEntityEvent.DamageCause.ENTITY_ATTACK) {
-                
-                // Add combo
-                plugin.getAbilityManager().addCombo(player);
-                int combo = plugin.getAbilityManager().getCombo(player);
-                
-                // Visual combo effect
-                player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1, 1);
-                player.spawnParticle(org.bukkit.Particle.ENCHANT, player.getLocation().add(0, 2, 0), 20, 0.5, 0.5, 0.5, 0);
-                
-                player.sendActionBar(Component.text("§6Combo: §e" + combo + "§6/3"));
-                
-                // Check for 3 combos
-                if (combo >= 3) {
-                    // Trigger ability
-                    if (!plugin.getCooldownManager().isOnCooldown(player, abilityName)) {
-                        ability.onCombo(player, target);
-                        plugin.getCooldownManager().setCooldown(player, abilityName, ability.getCooldown());
-                        plugin.getAbilityManager().resetCombo(player);
-                        
-                        // Success message
-                        player.sendMessage(Component.text("§a§l✦ ABILITY TRIGGERED! ✦"));
-                        player.playSound(player.getLocation(), Sound.UI_TOAST_CHALLENGE_COMPLETE, 1, 1);
-                    } else {
-                        long remaining = plugin.getCooldownManager().getRemainingCooldown(player, abilityName);
-                        player.sendActionBar(Component.text("§cCooldown: " + remaining + "s"));
-                        plugin.getAbilityManager().resetCombo(player);
-                    }
+        // Add combo counter
+        plugin.getAbilityManager().addCombo(player);
+        int combo = plugin.getAbilityManager().getCombo(player);
+        
+        // Visual combo effect
+        player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1, 1);
+        player.spawnParticle(org.bukkit.Particle.CRIT, target.getLocation().add(0, 1, 0), 10, 0.3, 0.5, 0.3, 0.1);
+        
+        // Show combo in action bar
+        player.sendActionBar(Component.text(
+            "§6⚡ Combo: §e" + combo + "§6/3 §7" + 
+            (target instanceof Player ? "vs " + ((Player) target).getName() : "vs Mob")
+        ));
+        
+        // Check for 3 combos
+        if (combo >= 3) {
+            // Check cooldown
+            if (!plugin.getCooldownManager().isOnCooldown(player, abilityName)) {
+                // Trigger ability
+                if (target instanceof Player) {
+                    ability.onCombo(player, (Player) target);
+                } else {
+                    // For mobs, create a dummy player? Or just trigger without target
+                    ability.onTrigger(player);
                 }
+                
+                // Set cooldown
+                plugin.getCooldownManager().setCooldown(player, abilityName, ability.getCooldown());
+                
+                // Reset combo
+                plugin.getAbilityManager().resetCombo(player);
+                
+                // Success message
+                player.sendMessage(Component.text("§a§l✦ ABILITY TRIGGERED! ✦"));
+                player.playSound(player.getLocation(), Sound.UI_TOAST_CHALLENGE_COMPLETE, 1, 1);
+                
+                // Particle effect
+                player.getWorld().spawnParticle(org.bukkit.Particle.TOTEM_OF_UNDYING, 
+                    player.getLocation().add(0, 2, 0), 50, 0.5, 0.5, 0.5, 0.5);
+            } else {
+                // On cooldown
+                long remaining = plugin.getCooldownManager().getRemainingCooldown(player, abilityName);
+                player.sendActionBar(Component.text("§cCooldown: " + remaining + "s"));
+                plugin.getAbilityManager().resetCombo(player);
             }
         }
     }
     
     @EventHandler
-    public void onPlayerInteract(PlayerInteractEvent event) {
-        Player player = event.getPlayer();
-        String abilityName = plugin.getAbilityManager().getPlayerAbility(player);
-        
-        if (abilityName == null) return;
-        
-        Ability ability = plugin.getAbilityManager().getAbility(abilityName);
-        if (ability == null) return;
-        
-        // Manual triggers (optional)
-        if (event.getAction() == Action.RIGHT_CLICK_AIR || 
-            event.getAction() == Action.RIGHT_CLICK_BLOCK) {
-            
-            if (!plugin.getCooldownManager().isOnCooldown(player, abilityName)) {
-                ability.onRightClick(player);
-                plugin.getCooldownManager().setCooldown(player, abilityName, ability.getCooldown());
-            } else {
-                long remaining = plugin.getCooldownManager().getRemainingCooldown(player, abilityName);
-                player.sendActionBar(Component.text("§cCooldown: " + remaining + "s"));
-            }
-        } else if (event.getAction() == Action.LEFT_CLICK_AIR || 
-                   event.getAction() == Action.LEFT_CLICK_BLOCK) {
-            ability.onLeftClick(player);
+    public void onPlayerDamage(EntityDamageEvent event) {
+        // Optional: Handle self-damage prevention
+        if (event.getEntity() instanceof Player player) {
+            // Check if damage is from ability (custom damage source)
+            // You can implement this if needed
         }
     }
 }
