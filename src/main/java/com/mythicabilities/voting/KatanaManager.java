@@ -33,6 +33,30 @@ public class KatanaManager {
         this.bountyBar = BossBar.bossBar(Component.text("§6⚔ No Active Bounty ⚔"), 1.0f, BossBar.Color.YELLOW, BossBar.Overlay.PROGRESS);
     }
     
+    // ========== NEW: Getter methods for KatanaCommand ==========
+    
+    /**
+     * Get death count for a player
+     */
+    public int getDeathCount(Player player) {
+        return deathCount.getOrDefault(player.getUniqueId(), 0);
+    }
+    
+    /**
+     * Get team creation cooldown in hours
+     */
+    public long getTeamCooldown(Player player) {
+        UUID playerId = player.getUniqueId();
+        Long cooldown = teamCreationCooldown.get(playerId);
+        
+        if (cooldown == null) return 0;
+        
+        long timeLeft = (cooldown + COOLDOWN_24H) - System.currentTimeMillis();
+        return Math.max(0, timeLeft / 3600000); // Convert to hours
+    }
+    
+    // ========== Original Methods ==========
+    
     /**
      * Create a katana bound to a specific leader
      */
@@ -405,7 +429,7 @@ public class KatanaManager {
      */
     private void removeBoundKatana(Player player) {
         for (ItemStack item : player.getInventory().getContents()) {
-            if (isBoundKatana(item) && getKatanaOwner(item).equals(player.getUniqueId())) {
+            if (item != null && isBoundKatana(item) && getKatanaOwner(item).equals(player.getUniqueId())) {
                 player.getInventory().remove(item);
                 break;
             }
@@ -423,19 +447,6 @@ public class KatanaManager {
         
         long timeLeft = (cooldown + COOLDOWN_24H) - System.currentTimeMillis();
         return timeLeft <= 0;
-    }
-    
-    /**
-     * Get remaining cooldown in hours
-     */
-    public long getTeamCooldown(Player player) {
-        UUID playerId = player.getUniqueId();
-        Long cooldown = teamCreationCooldown.get(playerId);
-        
-        if (cooldown == null) return 0;
-        
-        long timeLeft = (cooldown + COOLDOWN_24H) - System.currentTimeMillis();
-        return Math.max(0, timeLeft / 3600000); // Convert to hours
     }
     
     /**
