@@ -14,7 +14,8 @@ import com.mythicabilities.gui.AbilitySpinGUI;
 import com.mythicabilities.utils.CooldownManager;
 import com.mythicabilities.utils.TitleBar;
 import com.mythicabilities.voting.VoteManager;
-import com.mythicabilities.voting.KatanaManager;
+// REMOVE THIS LINE - it's causing duplicate
+// import com.mythicabilities.voting.KatanaManager;
 import com.mythicabilities.voting.VoteCommand;
 import com.mythicabilities.voting.TeamCommand;
 import com.mythicabilities.voting.KatanaCommand;
@@ -22,9 +23,6 @@ import com.mythicabilities.voting.LeaderCommand;
 import com.mythicabilities.voting.KatanaListener;
 import com.mythicabilities.scoreboard.ScoreboardManager;
 import com.mythicabilities.scoreboard.ScoreboardCommand;
-import com.mythicabilities.katana.KatanaManager; // NEW: Katana System
-import com.mythicabilities.katana.KatanaAdminCommand; // NEW: Katana Admin Command
-import com.mythicabilities.katana.KatanaData; // NEW: Katana Data
 import org.bukkit.plugin.java.JavaPlugin;
 
 public class MythicAbilities extends JavaPlugin {
@@ -40,13 +38,13 @@ public class MythicAbilities extends JavaPlugin {
     
     // Voting System Managers
     private VoteManager voteManager;
-    private com.mythicabilities.voting.KatanaManager votingKatanaManager; // Voting katana manager
+    private com.mythicabilities.voting.KatanaManager votingKatanaManager; // Fully qualified
     
     // Scoreboard Manager
     private ScoreboardManager scoreboardManager;
     
-    // NEW: Katana System Manager
-    private com.mythicabilities.katana.KatanaManager katanaManager;
+    // Katana Admin System Manager
+    private com.mythicabilities.katana.KatanaManager katanaAdminManager; // Fully qualified
     
     @Override
     public void onEnable() {
@@ -71,8 +69,8 @@ public class MythicAbilities extends JavaPlugin {
         // Initialize Scoreboard System
         this.scoreboardManager = new ScoreboardManager(this);
         
-        // NEW: Initialize Katana System
-        this.katanaManager = new com.mythicabilities.katana.KatanaManager(this);
+        // Initialize Katana Admin System
+        this.katanaAdminManager = new com.mythicabilities.katana.KatanaManager(this);
         
         // Register abilities
         registerAbilities();
@@ -104,27 +102,24 @@ public class MythicAbilities extends JavaPlugin {
         // Register Voting Commands
         getCommand("vote").setExecutor(new VoteCommand(this));
         getCommand("team").setExecutor(new TeamCommand(this));
-        getCommand("katana").setExecutor(new KatanaCommand(this)); // Voting katana command
+        getCommand("katana").setExecutor(new KatanaCommand(this));
         getCommand("leader").setExecutor(new LeaderCommand(this));
         
         // Register Scoreboard Command
         getCommand("scoreboard").setExecutor(new ScoreboardCommand(this));
         
-        // NEW: Register Katana Admin Command
-        KatanaAdminCommand katanaAdminCommand = new KatanaAdminCommand(this);
+        // Register Katana Admin Command
+        com.mythicabilities.katana.KatanaAdminCommand katanaAdminCommand = 
+            new com.mythicabilities.katana.KatanaAdminCommand(this);
         getCommand("katanadmin").setExecutor(katanaAdminCommand);
         getCommand("katanadmin").setTabCompleter(katanaAdminCommand);
         
         getLogger().info("MythicAbilities has been enabled successfully!");
         getLogger().info("Supporting Minecraft 1.21.11 with latest features!");
         getLogger().info("Loaded " + abilityManager.getAllAbilities().size() + " abilities!");
-        getLogger().info("Voting System initialized with 15 legendary katanas!");
-        getLogger().info("Scoreboard System initialized with dynamic rankings!");
-        getLogger().info("Katana Admin System initialized with 16 legendary katanas!"); // NEW
     }
     
     private void registerAbilities() {
-        // Register all abilities
         abilityManager.registerAbility(new InfernoTouch(this));
         abilityManager.registerAbility(new FrostWalker(this));
         abilityManager.registerAbility(new VoidWalker(this));
@@ -141,11 +136,9 @@ public class MythicAbilities extends JavaPlugin {
     
     @Override
     public void onDisable() {
-        // Clean up any active abilities
         if (forceAbilityManager != null) {
             forceAbilityManager.stopEvent();
         }
-        
         getLogger().info("MythicAbilities has been disabled!");
     }
     
@@ -181,7 +174,6 @@ public class MythicAbilities extends JavaPlugin {
         return forceAbilityManager;
     }
     
-    // Voting System Getters
     public VoteManager getVoteManager() {
         return voteManager;
     }
@@ -190,13 +182,11 @@ public class MythicAbilities extends JavaPlugin {
         return votingKatanaManager;
     }
     
-    // Scoreboard System Getter
     public ScoreboardManager getScoreboardManager() {
         return scoreboardManager;
     }
     
-    // NEW: Katana System Getter
-    public com.mythicabilities.katana.KatanaManager getKatanaManager() {
-        return katanaManager;
+    public com.mythicabilities.katana.KatanaManager getKatanaAdminManager() {
+        return katanaAdminManager;
     }
 }
