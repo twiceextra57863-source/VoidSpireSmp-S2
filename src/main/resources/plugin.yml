@@ -3,37 +3,37 @@ version: 1.0.0
 main: com.mythicabilities.MythicAbilities
 api-version: 1.21
 author: YourName
-description: Advanced abilities plugin with voting system, 15 legendary katanas, and dynamic scoreboard
+description: Ultimate abilities plugin with voting system, 15 legendary katanas, dynamic scoreboard, and complete admin katana control
 
 commands:
-  # Ability Commands
+  # ============= ABILITY COMMANDS =============
   abilities:
     description: Open abilities menu
     usage: /abilities
     aliases: [ab, ability]
     
-  # SMP Admin Commands
+  # ============= SMP ADMIN COMMANDS =============
   smp:
     description: Main SMP control command
     usage: /smp <start|stop|status|set|border|pvp|grace|event|force|testcombo|help>
     permission: mythicabilities.admin
     aliases: [smpadmin, smpcontrol, smpmanage]
     
-  # Admin Panel
+  # ============= ADMIN PANEL =============
   admin:
     description: Admin control panel
     usage: /admin
     permission: mythicabilities.admin
     aliases: [panel, control, apanel]
     
-  # Ability Give Command
+  # ============= ABILITY GIVE COMMAND =============
   giveability:
     description: Give ability to player
     usage: /giveability <player> <ability> or /giveability <ability> (self)
     permission: mythicabilities.admin
     aliases: [ga, giveabil, gabi, giveab]
     
-  # 🗳️ VOTING SYSTEM COMMANDS
+  # ============= VOTING SYSTEM COMMANDS =============
   vote:
     description: Vote for a leader to form a kingdom
     usage: /vote <playername>
@@ -42,15 +42,15 @@ commands:
     
   team:
     description: Manage your kingdom/team
-    usage: /team <info|setname|setcolor|setbanner|members>
+    usage: /team <info|setname|setcolor|setbanner|members|cooldown>
     permission: mythicabilities.team
     aliases: [kingdom, guild]
     
   katana:
-    description: View katana info or abilities
+    description: View your katana info (voting system)
     usage: /katana <info|list|ability>
     permission: mythicabilities.katana
-    aliases: [k, blade]
+    aliases: [k, blade, mykatana]
     
   leader:
     description: Leader specific commands
@@ -58,15 +58,22 @@ commands:
     permission: mythicabilities.leader
     aliases: [king, chief]
     
-  # 📊 SCOREBOARD COMMANDS (NEW)
+  # ============= SCOREBOARD COMMANDS =============
   scoreboard:
     description: Toggle scoreboard on/off
     usage: /scoreboard [on|off]
     permission: mythicabilities.scoreboard
-    aliases: [sb, board, leaderboard]
+    aliases: [sb, board, leaderboard, lb]
+    
+  # ============= KATANA ADMIN SYSTEM =============
+  katanadmin:
+    description: Complete katana admin control system
+    usage: /katanadmin <give|giveall|giverandom|giverandomall|spin|spinall|list|info|check|remove|removeall|reload>
+    permission: mythicabilities.katana.admin
+    aliases: [kadmin, katanaadmin, ka, bladeadmin]
 
 permissions:
-  # 👤 Player Permissions
+  # ============= PLAYER PERMISSIONS =============
   mythicabilities.use:
     description: Allows using abilities
     default: true
@@ -80,15 +87,14 @@ permissions:
     default: true
     
   mythicabilities.katana:
-    description: Can use katana commands
+    description: Can use katana commands (voting system)
     default: true
     
-  # NEW: Scoreboard Permission
   mythicabilities.scoreboard:
     description: Can toggle scoreboard
     default: true
     
-  # 👑 Leader Permissions  
+  # ============= LEADER PERMISSIONS =============
   mythicabilities.leader:
     description: Leader specific commands
     default: false
@@ -105,7 +111,33 @@ permissions:
     description: Can disband team
     default: false
     
-  # ⚔️ Admin Permissions
+  # ============= KATANA ADMIN PERMISSIONS =============
+  mythicabilities.katana.admin:
+    description: Full access to katana admin commands
+    default: op
+    children:
+      mythicabilities.katana.give: true
+      mythicabilities.katana.remove: true
+      mythicabilities.katana.spin: true
+      mythicabilities.katana.reload: true
+      
+  mythicabilities.katana.give:
+    description: Can give katanas to players
+    default: op
+    
+  mythicabilities.katana.remove:
+    description: Can remove katanas from players
+    default: op
+    
+  mythicabilities.katana.spin:
+    description: Can start katana spins
+    default: op
+    
+  mythicabilities.katana.reload:
+    description: Can reload katana config
+    default: op
+    
+  # ============= ADMIN PERMISSIONS =============
   mythicabilities.admin:
     description: Allows using admin commands
     default: op
@@ -116,22 +148,13 @@ permissions:
       mythicabilities.katana: true
       mythicabilities.leader: true
       mythicabilities.scoreboard: true
+      mythicabilities.katana.admin: true
       
   mythicabilities.bypass.cooldown:
     description: Bypass ability cooldowns
     default: op
     
   mythicabilities.bypass.combo:
-    description: Abilities always ready (no combo needed)
-    default: op
-    
-  mythicabilities.event.create:
-    description: Create ability events
-    default: op
-    
-  mythicabilities.force.give:
-    description: Force give abilities to players
-    default: op  mythicabilities.bypass.combo:
     description: Abilities always ready (no combo needed)
     default: op
     
