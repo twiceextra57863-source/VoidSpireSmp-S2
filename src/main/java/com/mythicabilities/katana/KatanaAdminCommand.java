@@ -8,6 +8,9 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack; // ADD THIS IMPORT
+import org.bukkit.inventory.meta.ItemMeta; // ADD THIS IMPORT
+import org.bukkit.Material; // ADD THIS IMPORT
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -15,14 +18,17 @@ import java.util.stream.Collectors;
 public class KatanaAdminCommand implements CommandExecutor, TabCompleter {
     
     private final MythicAbilities plugin;
-    private final KatanaManager katanaManager;
+    private final com.mythicabilities.katana.KatanaManager katanaManager;
     private final KatanaSpinGUI spinGUI;
     
     public KatanaAdminCommand(MythicAbilities plugin) {
         this.plugin = plugin;
-        this.katanaManager = plugin.getKatanaManager();
+        this.katanaManager = plugin.getKatanaAdminManager();
         this.spinGUI = new KatanaSpinGUI(plugin);
     }
+    
+    // ... rest of the class remains the same ...
+}
     
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
