@@ -3,8 +3,9 @@ package com.mythicabilities.listeners;
 import com.mythicabilities.MythicAbilities;
 import com.mythicabilities.abilities.Ability;
 import net.kyori.adventure.text.Component;
-import org.bukkit.Sound;
+import org.bukkit.Location; // ADD THIS IMPORT
 import org.bukkit.Particle;
+import org.bukkit.Sound;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -178,8 +179,8 @@ public class AbilityUseListener implements Listener {
                 break;
                 
             case 3:
-                // Third hit - massive explosion
-                player.getWorld().spawnParticle(Particle.CRIT_MAGIC, targetLoc, 40, 0.5, 0.5, 0.5, 0.5);
+                // Third hit - massive explosion - FIXED: Removed CRIT_MAGIC
+                player.getWorld().spawnParticle(Particle.CRIT, targetLoc, 40, 0.5, 0.5, 0.5, 0.5);
                 player.getWorld().spawnParticle(Particle.ENCHANT, targetLoc, 30, 0.5, 0.5, 0.5, 0.5);
                 player.getWorld().spawnParticle(Particle.FLASH, targetLoc, 2);
                 player.getWorld().spawnParticle(Particle.SONIC_BOOM, targetLoc, 3, 0.2, 0.2, 0.2, 0);
@@ -268,4 +269,4 @@ public class AbilityUseListener implements Listener {
         player.playSound(player.getLocation(), Sound.UI_TOAST_CHALLENGE_COMPLETE, 1, 1);
         player.playSound(player.getLocation(), Sound.ENTITY_FIREWORK_ROCKET_BLAST, 1, 1.2f);
     }
-                }
+}
