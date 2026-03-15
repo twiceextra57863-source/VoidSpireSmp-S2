@@ -9,25 +9,25 @@ commands:
   abilities:
     description: Open abilities menu
     usage: /abilities
-    aliases: [ab]
+    aliases: [ab, ability]
     
   smp:
     description: Main SMP control command
-    usage: /smp <start|stop|status|set|border|pvp|grace|event|force|help>
+    usage: /smp <start|stop|status|set|border|pvp|grace|event|force|testcombo|help>
     permission: mythicabilities.admin
-    aliases: [smpadmin, smpcontrol]
+    aliases: [smpadmin, smpcontrol, smpmanage]
     
   admin:
     description: Admin control panel
     usage: /admin
     permission: mythicabilities.admin
-    aliases: [panel, control]
+    aliases: [panel, control, apanel]
     
   giveability:
     description: Give ability to player
     usage: /giveability <player> <ability> or /giveability <ability> (self)
     permission: mythicabilities.admin
-    aliases: [ga, giveabil, gabi]
+    aliases: [ga, giveabil, gabi, giveab]
 
 permissions:
   mythicabilities.use:
@@ -45,5 +45,13 @@ permissions:
     default: op
     
   mythicabilities.bypass.combo:
-    description: Abilities always ready
+    description: Abilities always ready (no combo needed)
+    default: op
+    
+  mythicabilities.event.create:
+    description: Create ability events
+    default: op
+    
+  mythicabilities.force.give:
+    description: Force give abilities to players
     default: op
