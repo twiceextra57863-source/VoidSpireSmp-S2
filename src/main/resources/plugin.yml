@@ -3,42 +3,106 @@ version: 1.0.0
 main: com.mythicabilities.MythicAbilities
 api-version: 1.21
 author: YourName
-description: Advanced abilities plugin with complete admin control system
+description: Advanced abilities plugin with voting system and 15 legendary katanas
 
 commands:
+  # Ability Commands
   abilities:
     description: Open abilities menu
     usage: /abilities
     aliases: [ab, ability]
     
+  # SMP Admin Commands
   smp:
     description: Main SMP control command
     usage: /smp <start|stop|status|set|border|pvp|grace|event|force|testcombo|help>
     permission: mythicabilities.admin
     aliases: [smpadmin, smpcontrol, smpmanage]
     
+  # Admin Panel
   admin:
     description: Admin control panel
     usage: /admin
     permission: mythicabilities.admin
     aliases: [panel, control, apanel]
     
+  # Ability Give Command
   giveability:
     description: Give ability to player
     usage: /giveability <player> <ability> or /giveability <ability> (self)
     permission: mythicabilities.admin
     aliases: [ga, giveabil, gabi, giveab]
+    
+  # 🗳️ VOTING SYSTEM COMMANDS
+  vote:
+    description: Vote for a leader to form a kingdom
+    usage: /vote <playername>
+    permission: mythicabilities.vote
+    aliases: [v, elect]
+    
+  team:
+    description: Manage your kingdom/team
+    usage: /team <info|setname|setcolor|setbanner|members>
+    permission: mythicabilities.team
+    aliases: [kingdom, guild]
+    
+  katana:
+    description: View katana info or abilities
+    usage: /katana <info|list|ability>
+    permission: mythicabilities.katana
+    aliases: [k, blade]
+    
+  leader:
+    description: Leader specific commands
+    usage: /leader <promote|kick|disband>
+    permission: mythicabilities.leader
+    aliases: [king, chief]
 
 permissions:
+  # 👤 Player Permissions
   mythicabilities.use:
     description: Allows using abilities
     default: true
     
+  mythicabilities.vote:
+    description: Can vote for leader
+    default: true
+    
+  mythicabilities.team:
+    description: Can use team commands
+    default: true
+    
+  mythicabilities.katana:
+    description: Can use katana commands
+    default: true
+    
+  # 👑 Leader Permissions  
+  mythicabilities.leader:
+    description: Leader specific commands
+    default: false
+    
+  mythicabilities.leader.promote:
+    description: Can promote members
+    default: false
+    
+  mythicabilities.leader.kick:
+    description: Can kick members
+    default: false
+    
+  mythicabilities.leader.disband:
+    description: Can disband team
+    default: false
+    
+  # ⚔️ Admin Permissions
   mythicabilities.admin:
     description: Allows using admin commands
     default: op
     children:
       mythicabilities.use: true
+      mythicabilities.vote: true
+      mythicabilities.team: true
+      mythicabilities.katana: true
+      mythicabilities.leader: true
       
   mythicabilities.bypass.cooldown:
     description: Bypass ability cooldowns
