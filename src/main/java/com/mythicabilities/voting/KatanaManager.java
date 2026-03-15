@@ -4,7 +4,7 @@ import com.mythicabilities.MythicAbilities;
 import net.kyori.adventure.text.Component;
 import org.bukkit.*;
 import org.bukkit.entity.ArmorStand;
-import org.bukkit.entity.EntityType; // ADD THIS MISSING IMPORT
+import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -27,8 +27,32 @@ public class KatanaManager {
     private final long COOLDOWN_24H = 86400000; // 24 hours in milliseconds
     private final int MAX_DEATHS = 3;
     
+    // Model data for katanas (for resource pack compatibility)
+    private final Map<String, Integer> katanaModelData = new HashMap<>();
+    
     public KatanaManager(MythicAbilities plugin) {
         this.plugin = plugin;
+        initializeModelData();
+    }
+    
+    private void initializeModelData() {
+        // Assign custom model data IDs for each katana (2000-2015)
+        katanaModelData.put("Storm Breaker", 2000);
+        katanaModelData.put("Flame Dragon", 2001);
+        katanaModelData.put("Shadow Dancer", 2002);
+        katanaModelData.put("Wind Cutter", 2003);
+        katanaModelData.put("Earth Shaker", 2004);
+        katanaModelData.put("Frost Bite", 2005);
+        katanaModelData.put("Void Walker", 2006);
+        katanaModelData.put("Sun Slash", 2007);
+        katanaModelData.put("Nature's Fang", 2008);
+        katanaModelData.put("Stone Edge", 2009);
+        katanaModelData.put("Wave Splitter", 2010);
+        katanaModelData.put("Blood Moon", 2011);
+        katanaModelData.put("Soul Reaper", 2012);
+        katanaModelData.put("Thunder God", 2013);
+        katanaModelData.put("Celestial Blade", 2014);
+        katanaModelData.put("Dragon's Wrath", 2015);
     }
     
     // ============= DEATH COUNT METHODS =============
@@ -72,26 +96,6 @@ public class KatanaManager {
         long timeLeft = (cooldown + COOLDOWN_24H) - System.currentTimeMillis();
         return timeLeft <= 0;
     }
-
-    public ItemStack createKatanaWithCustomTexture(String katanaName, Player owner) {
-    ItemStack katana = new ItemStack(Material.NETHERITE_SWORD);
-    ItemMeta meta = katana.getItemMeta();
-    
-    // Create namespace key (1.21.11 compatible)
-    String textureKey = katanaName.toLowerCase()
-        .replace(" ", "_")
-        .replace("'", "");
-    
-    NamespacedKey modelKey = new NamespacedKey("mythickatanas", textureKey);
-    meta.setItemModel(modelKey);
-    
-    // Add display name etc.
-    meta.displayName(Component.text(getKatanaDisplayName(katanaName)));
-    
-    katana.setItemMeta(meta);
-    return katana;
-        
-    }
     
     // ============= KATANA CREATION =============
     
@@ -103,8 +107,10 @@ public class KatanaManager {
         String displayName = getKatanaDisplayName(katanaType);
         meta.displayName(Component.text(displayName));
         
-        // Set custom model data for texture
-        meta.setCustomModelData(2000 + getKatanaIndex(katanaType));
+        // FIXED: Use CustomModelData instead of setItemModel
+        // This works with resource packs and is compatible with all versions
+        int modelData = katanaModelData.getOrDefault(katanaType, 2000);
+        meta.setCustomModelData(modelData);
         
         // Store owner data
         meta.getPersistentDataContainer().set(
@@ -213,7 +219,7 @@ public class KatanaManager {
         Location loc = player.getLocation().clone().add(0, 2, 0);
         
         // Create bounty armor stand
-        ArmorStand bountyStand = (ArmorStand) player.getWorld().spawnEntity(loc, EntityType.ARMOR_STAND); // EntityType now works
+        ArmorStand bountyStand = (ArmorStand) player.getWorld().spawnEntity(loc, EntityType.ARMOR_STAND);
         bountyStand.setGravity(false);
         bountyStand.setInvulnerable(true);
         bountyStand.setVisible(false);
@@ -268,6 +274,22 @@ public class KatanaManager {
                 ticks += 2;
             }
         }.runTaskTimer(plugin, 0, 2);
+    }
+    
+    // ============= RESOURCE PACK COMPATIBILITY =============
+    
+    /**
+     * Get custom model data for a katana (for resource pack textures)
+     */
+    public int getModelData(String katanaType) {
+        return katanaModelData.getOrDefault(katanaType, 2000);
+    }
+    
+    /**
+     * Get all model data mappings
+     */
+    public Map<String, Integer> getAllModelData() {
+        return new HashMap<>(katanaModelData);
     }
     
     // ============= HELPER METHODS =============
