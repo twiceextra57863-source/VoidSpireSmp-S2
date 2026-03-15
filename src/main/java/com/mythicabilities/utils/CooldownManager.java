@@ -30,7 +30,9 @@ public class CooldownManager {
         if (abilityCooldowns == null) return false;
         
         Long cooldown = abilityCooldowns.get(player.getUniqueId());
-        return cooldown != null && cooldown > System.currentTimeMillis();
+        if (cooldown == null) return false;
+        
+        return cooldown > System.currentTimeMillis();
     }
     
     public long getRemainingCooldown(Player player, String abilityName) {
@@ -41,87 +43,6 @@ public class CooldownManager {
         if (cooldown == null) return 0;
         
         return (cooldown - System.currentTimeMillis()) / 1000;
-    }
-    
-    private void startCooldownDisplay() {
-        new BukkitRunnable() {
-            @Override
-            public void run() {
-                for (Player player : Bukkit.getOnlinePlayers()) {
-                    String abilityName = plugin.getAbilityManager().getPlayerAbility(player);
-                    if (abilityName == null) continue;
-                    
-                    if (isOnCooldown(player, abilityName)) {
-                        long remaining = getRemainingCooldown(player, abilityName);
-                        int totalCooldown = getTotalCooldown(abilityName);
-                        int progress = (int) ((remaining * 20) / totalCooldown);
-                        
-                        // OPTION 1: Diamond Luxe (Premium Look)
-                        String bar = createDiamondBar(progress, remaining);
-                        
-                        // OPTION 2: Gradient Circles (Modern Look)
-                        // String bar = createGradientCircleBar(progress, remaining);
-                        
-                        // OPTION 3: Block Style (Classic Look)
-                        // String bar = createBlockBar(progress, remaining);
-                        
-                        player.sendActionBar(Component.text("§d" + getAbilityIcon(abilityName) + " §7" + bar + " §e" + remaining + "s"));
-                        
-                    } else {
-                        // Show ready status
-                        player.sendActionBar(Component.text("§a" + getAbilityIcon(abilityName) + " §7[§a■■■■■■■■■■■■■■■■■■■■§7] §aREADY!"));
-                    }
-                }
-            }
-        }.runTaskTimer(plugin, 0, 20);
-    }
-    
-    private String createDiamondBar(int progress, long remaining) {
-        StringBuilder bar = new StringBuilder("§8[");
-        for (int i = 0; i < 20; i++) {
-            if (i < progress) {
-                // Gradient diamonds based on remaining time
-                if (remaining > 20) bar.append("§a♦");
-                else if (remaining > 10) bar.append("§e♦");
-                else if (remaining > 5) bar.append("§6♦");
-                else bar.append("§c♦");
-            } else {
-                bar.append("§8◇");
-            }
-        }
-        bar.append("§8]");
-        return bar.toString();
-    }
-    
-    private String createGradientCircleBar(int progress, long remaining) {
-        StringBuilder bar = new StringBuilder("§8[");
-        String[] colors = {"§a", "§b", "§d", "§c"}; // Green → Aqua → Pink → Red
-        for (int i = 0; i < 20; i++) {
-            if (i < progress) {
-                int colorIndex = Math.min(colors.length - 1, (i * colors.length) / 20);
-                bar.append(colors[colorIndex] + "●");
-            } else {
-                bar.append("§7○");
-            }
-        }
-        bar.append("§8]");
-        return bar.toString();
-    }
-    
-    private String createBlockBar(int progress, long remaining) {
-        StringBuilder bar = new StringBuilder("§8[");
-        for (int i = 0; i < 20; i++) {
-            if (i < progress) {
-                if (remaining > 20) bar.append("§a█");
-                else if (remaining > 10) bar.append("§e█");
-                else if (remaining > 5) bar.append("§6█");
-                else bar.append("§c█");
-            } else {
-                bar.append("§7░");
-            }
-        }
-        bar.append("§8]");
-        return bar.toString();
     }
     
     private int getTotalCooldown(String abilityName) {
@@ -144,17 +65,71 @@ public class CooldownManager {
     private String getAbilityIcon(String abilityName) {
         // Return icon for each ability
         switch (abilityName) {
-            case "inferno_touch": return "§c♨"; // Fire icon
-            case "frost_walker": return "§b❄"; // Snowflake
-            case "void_walker": return "§5👁"; // Eye
-            case "mandela_effect": return "§d🌀"; // Cyclone
-            case "natures_wrath": return "§2🌿"; // Leaf
-            case "aerial_mace": return "§e⚡"; // Lightning
-            case "kaguras_umbrella": return "§d☂"; // Umbrella
-            case "suyous_transcendence": return "§6⚔"; // Crossed swords
-            case "lings_shadow": return "§5🗡"; // Dagger
-            case "first_of_stone": return "§7⛰"; // Mountain
+            case "inferno_touch": return "§c♨";
+            case "frost_walker": return "§b❄";
+            case "void_walker": return "§5👁";
+            case "mandela_effect": return "§d🌀";
+            case "natures_wrath": return "§2🌿";
+            case "aerial_mace": return "§e⚡";
+            case "kaguras_umbrella": return "§d☂";
+            case "suyous_transcendence": return "§6⚔";
+            case "lings_shadow": return "§5🗡";
+            case "first_of_stone": return "§7⛰";
             default: return "§f✦";
         }
+    }
+    
+    private void startCooldownDisplay() {
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                for (Player player : Bukkit.getOnlinePlayers()) {
+                    String abilityName = plugin.getAbilityManager().getPlayerAbility(player);
+                    if (abilityName == null) {
+                        // Show combo if available
+                        int combo = plugin.getAbilityManager().getCombo(player);
+                        if (combo > 0) {
+                            player.sendActionBar(Component.text("§6Combo: §e" + combo + "§6/3"));
+                        }
+                        continue;
+                    }
+                    
+                    if (isOnCooldown(player, abilityName)) {
+                        long remaining = getRemainingCooldown(player, abilityName);
+                        int totalCooldown = getTotalCooldown(abilityName);
+                        int progress = (int) ((remaining * 20) / totalCooldown);
+                        
+                        // Create diamond bar
+                        StringBuilder bar = new StringBuilder("§8[");
+                        for (int i = 0; i < 20; i++) {
+                            if (i < progress) {
+                                if (remaining > totalCooldown/2) bar.append("§a♦");
+                                else if (remaining > totalCooldown/4) bar.append("§e♦");
+                                else bar.append("§c♦");
+                            } else {
+                                bar.append("§8◇");
+                            }
+                        }
+                        bar.append("§8]");
+                        
+                        player.sendActionBar(Component.text(
+                            getAbilityIcon(abilityName) + " §7" + bar.toString() + " §e" + remaining + "s"
+                        ));
+                    } else {
+                        // Show ready status
+                        int combo = plugin.getAbilityManager().getCombo(player);
+                        if (combo > 0) {
+                            player.sendActionBar(Component.text(
+                                getAbilityIcon(abilityName) + " §7[§a■■■■■■■■■■■■■■■■■■■■§7] §aREADY! §6Combo: §e" + combo + "§6/3"
+                            ));
+                        } else {
+                            player.sendActionBar(Component.text(
+                                getAbilityIcon(abilityName) + " §7[§a■■■■■■■■■■■■■■■■■■■■§7] §aREADY!"
+                            ));
+                        }
+                    }
+                }
+            }
+        }.runTaskTimer(plugin, 0, 20);
     }
 }
