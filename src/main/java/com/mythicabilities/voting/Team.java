@@ -19,23 +19,11 @@ public class Team {
     private String katanaType;
     private final Random random = new Random();
     
-    // 15 Katana types
     public static final String[] KATANA_NAMES = {
-        "Storm Breaker",
-        "Flame Dragon",
-        "Shadow Dancer",
-        "Wind Cutter",
-        "Earth Shaker",
-        "Frost Bite",
-        "Void Walker",
-        "Sun Slash",
-        "Nature's Fang",
-        "Stone Edge",
-        "Wave Splitter",
-        "Blood Moon",
-        "Soul Reaper",
-        "Thunder God",
-        "Celestial Blade"
+        "Storm Breaker", "Flame Dragon", "Shadow Dancer", "Wind Cutter",
+        "Earth Shaker", "Frost Bite", "Void Walker", "Sun Slash",
+        "Nature's Fang", "Stone Edge", "Wave Splitter", "Blood Moon",
+        "Soul Reaper", "Thunder God", "Celestial Blade"
     };
     
     public Team(MythicAbilities plugin, Player leader, List<UUID> voters) {
@@ -51,27 +39,23 @@ public class Team {
         this.bannerType = getRandomBanner();
         this.katanaType = KATANA_NAMES[random.nextInt(KATANA_NAMES.length)];
         
-        // Give leader katana
         giveLeaderKatana();
     }
     
     private ChatColor getRandomColor() {
-        ChatColor[] colors = {
-            ChatColor.RED, ChatColor.BLUE, ChatColor.GREEN, 
-            ChatColor.YELLOW, ChatColor.LIGHT_PURPLE, ChatColor.AQUA
-        };
+        ChatColor[] colors = {ChatColor.RED, ChatColor.BLUE, ChatColor.GREEN, 
+                              ChatColor.YELLOW, ChatColor.LIGHT_PURPLE, ChatColor.AQUA};
         return colors[random.nextInt(colors.length)];
     }
     
     private String getRandomBanner() {
-        String[] banners = {
-            "CREEPER", "SKULL", "FLOWER", "MOJANG", "PIGLIN"
-        };
+        String[] banners = {"CREEPER", "SKULL", "FLOWER", "MOJANG", "PIGLIN"};
         return banners[random.nextInt(banners.length)];
     }
     
     private void giveLeaderKatana() {
-        ItemStack katana = plugin.getKatanaManager().createBoundKatana(leader, katanaType);
+        // Use votingKatanaManager
+        ItemStack katana = plugin.getVotingKatanaManager().createBoundKatana(leader, katanaType);
         leader.getInventory().addItem(katana);
         leader.sendMessage(Component.text("§aYou received: " + getKatanaDisplayName()));
     }
@@ -129,12 +113,12 @@ public class Team {
         }
     }
     
-    // Getters
     public Player getLeader() { return leader; }
     public String getTeamName() { return teamName; }
     public ChatColor getTeamColor() { return teamColor; }
     public String getBannerType() { return bannerType; }
     public String getKatanaType() { return katanaType; }
+    
     public List<Player> getMembers() {
         List<Player> onlineMembers = new ArrayList<>();
         for (UUID uuid : members) {
