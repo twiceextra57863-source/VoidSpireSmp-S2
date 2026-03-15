@@ -4,8 +4,7 @@ import com.mythicabilities.MythicAbilities;
 import net.kyori.adventure.text.Component;
 import org.bukkit.*;
 import org.bukkit.entity.ArmorStand;
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.EntityType; // ADD THIS MISSING IMPORT
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -194,7 +193,7 @@ public class KatanaManager {
         Location loc = player.getLocation().clone().add(0, 2, 0);
         
         // Create bounty armor stand
-        ArmorStand bountyStand = (ArmorStand) player.getWorld().spawnEntity(loc, EntityType.ARMOR_STAND);
+        ArmorStand bountyStand = (ArmorStand) player.getWorld().spawnEntity(loc, EntityType.ARMOR_STAND); // EntityType now works
         bountyStand.setGravity(false);
         bountyStand.setInvulnerable(true);
         bountyStand.setVisible(false);
