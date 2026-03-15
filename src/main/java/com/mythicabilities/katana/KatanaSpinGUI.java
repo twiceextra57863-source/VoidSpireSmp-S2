@@ -7,6 +7,7 @@ import org.bukkit.*;
 import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack; // CRITICAL IMPORT
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.EulerAngle;
 import org.bukkit.util.Vector;
@@ -99,7 +100,7 @@ public class KatanaSpinGUI {
             stand.setMarker(true);
             stand.setSmall(true);
             
-            // Create sword item
+            // Create sword item - THIS USES ItemStack
             String randomKatana = katanaNames.get(random.nextInt(katanaNames.size()));
             ItemStack swordItem = plugin.getKatanaAdminManager().createKatana(randomKatana, null);
             stand.getEquipment().setItemInMainHand(swordItem);
@@ -150,23 +151,19 @@ public class KatanaSpinGUI {
                 
                 // Spin speed based on phase
                 double spinSpeed;
-                int particleDensity;
                 float soundPitch;
                 
                 switch (phase) {
                     case 1: // Fast spin
                         spinSpeed = 0.8;
-                        particleDensity = 10;
                         soundPitch = 1.0f + (frame * 0.005f);
                         break;
                     case 2: // Medium spin
                         spinSpeed = 0.4;
-                        particleDensity = 7;
                         soundPitch = 1.3f + (frame * 0.003f);
                         break;
                     default: // Slow spin (dramatic)
                         spinSpeed = 0.15;
-                        particleDensity = 5;
                         soundPitch = 1.6f + (frame * 0.002f);
                         break;
                 }
@@ -201,7 +198,7 @@ public class KatanaSpinGUI {
                         0
                     ));
                     
-                    // Change sword appearance during slow phase
+                    // Change sword appearance during slow phase - THIS USES ItemStack
                     if (phase == 3 && frame % 10 == 0) {
                         String randomKatana = katanaNames.get(random.nextInt(katanaNames.size()));
                         ItemStack swordItem = plugin.getKatanaAdminManager().createKatana(randomKatana, null);
@@ -363,4 +360,4 @@ public class KatanaSpinGUI {
     public boolean isSpinning(Player player) {
         return isSpinning.getOrDefault(player.getUniqueId(), false);
     }
-            }
+                                    }
