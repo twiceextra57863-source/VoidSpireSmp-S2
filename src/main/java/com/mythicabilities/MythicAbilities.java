@@ -13,6 +13,13 @@ import com.mythicabilities.listeners.WorldBorderListener;
 import com.mythicabilities.gui.AbilitySpinGUI;
 import com.mythicabilities.utils.CooldownManager;
 import com.mythicabilities.utils.TitleBar;
+import com.mythicabilities.voting.VoteManager;
+import com.mythicabilities.voting.KatanaManager;
+import com.mythicabilities.voting.VoteCommand;
+import com.mythicabilities.voting.TeamCommand;
+import com.mythicabilities.voting.KatanaCommand;
+import com.mythicabilities.voting.LeaderCommand;
+import com.mythicabilities.voting.KatanaListener;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public class MythicAbilities extends JavaPlugin {
@@ -24,7 +31,11 @@ public class MythicAbilities extends JavaPlugin {
     private SMPManager smpManager;
     private WorldBorderManager worldBorderManager;
     private AbilitySpinGUI spinGUI;
-    private ForceAbilityManager forceAbilityManager; // NEW
+    private ForceAbilityManager forceAbilityManager;
+    
+    // NEW: Voting System Managers
+    private VoteManager voteManager;
+    private KatanaManager katanaManager;
     
     @Override
     public void onEnable() {
@@ -40,7 +51,11 @@ public class MythicAbilities extends JavaPlugin {
         this.worldBorderManager = new WorldBorderManager(this);
         this.adminCommand = new AdminCommand(this);
         this.spinGUI = new AbilitySpinGUI(this);
-        this.forceAbilityManager = new ForceAbilityManager(this); // NEW
+        this.forceAbilityManager = new ForceAbilityManager(this);
+        
+        // NEW: Initialize Voting System
+        this.voteManager = new VoteManager(this);
+        this.katanaManager = new KatanaManager(this);
         
         // Register abilities
         registerAbilities();
@@ -51,6 +66,9 @@ public class MythicAbilities extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new WorldBorderListener(this), this);
         getServer().getPluginManager().registerEvents(new AdminPanelGUI(this, adminCommand), this);
         getServer().getPluginManager().registerEvents(spinGUI, this);
+        
+        // NEW: Register Voting Listeners
+        getServer().getPluginManager().registerEvents(new KatanaListener(this), this);
         
         // Register commands with tab completers
         getCommand("abilities").setExecutor(spinGUI);
@@ -66,9 +84,16 @@ public class MythicAbilities extends JavaPlugin {
         getCommand("giveability").setExecutor(giveAbilityCommand);
         getCommand("giveability").setTabCompleter(giveAbilityCommand);
         
+        // NEW: Register Voting Commands
+        getCommand("vote").setExecutor(new VoteCommand(this));
+        getCommand("team").setExecutor(new TeamCommand(this));
+        getCommand("katana").setExecutor(new KatanaCommand(this));
+        getCommand("leader").setExecutor(new LeaderCommand(this));
+        
         getLogger().info("MythicAbilities has been enabled successfully!");
         getLogger().info("Supporting Minecraft 1.21.11 with latest features!");
         getLogger().info("Loaded " + abilityManager.getAllAbilities().size() + " abilities!");
+        getLogger().info("Voting System initialized with 15 legendary katanas!");
     }
     
     private void registerAbilities() {
@@ -91,7 +116,7 @@ public class MythicAbilities extends JavaPlugin {
     public void onDisable() {
         // Clean up any active abilities
         if (forceAbilityManager != null) {
-            forceAbilityManager.stopEvent(); // Stop any active event
+            forceAbilityManager.stopEvent();
         }
         
         getLogger().info("MythicAbilities has been disabled!");
@@ -125,8 +150,16 @@ public class MythicAbilities extends JavaPlugin {
         return spinGUI;
     }
     
-    // NEW Getter
     public ForceAbilityManager getForceAbilityManager() {
         return forceAbilityManager;
+    }
+    
+    // NEW: Voting System Getters
+    public VoteManager getVoteManager() {
+        return voteManager;
+    }
+    
+    public KatanaManager getKatanaManager() {
+        return katanaManager;
     }
 }
