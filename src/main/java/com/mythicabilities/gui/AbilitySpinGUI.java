@@ -28,7 +28,14 @@ public class AbilitySpinGUI implements Listener, org.bukkit.command.CommandExecu
     private final Map<UUID, Boolean> isSpinning = new HashMap<>();
     private final Map<UUID, ArmorStand> spinStands = new HashMap<>();
     private final Map<UUID, Integer> spinFrames = new HashMap<>();
+    private final Map<UUID, Integer> spinPhase = new HashMap<>();
     private final Random random = new Random();
+    
+    // Animation constants
+    private final int TOTAL_FRAMES = 300; // 15 seconds at 20fps
+    private final int PHASE_1_END = 100;  // Fast spin
+    private final int PHASE_2_END = 200;  // Medium spin
+    private final int PHASE_3_END = 300;  // Slow spin + result
     
     public AbilitySpinGUI(MythicAbilities plugin) {
         this.plugin = plugin;
@@ -111,7 +118,6 @@ public class AbilitySpinGUI implements Listener, org.bukkit.command.CommandExecu
         }
     }
     
-    // CHANGED: Made this method PUBLIC so it can be called from PlayerJoinListener
     public void startVisualSpin(Player player) {
         UUID playerId = player.getUniqueId();
         
@@ -119,6 +125,7 @@ public class AbilitySpinGUI implements Listener, org.bukkit.command.CommandExecu
         if (isSpinning.getOrDefault(playerId, false)) return;
         
         isSpinning.put(playerId, true);
+        spinPhase.put(playerId, 1); // Phase 1: Fast spin
         
         // Freeze player
         player.setWalkSpeed(0);
@@ -129,10 +136,7 @@ public class AbilitySpinGUI implements Listener, org.bukkit.command.CommandExecu
         List<String> abilityNames = new ArrayList<>(plugin.getAbilityManager().getAllAbilities().keySet());
         if (abilityNames.isEmpty()) {
             player.sendMessage(Component.text("§cNo abilities available!"));
-            isSpinning.put(playerId, false);
-            player.setWalkSpeed(0.2f);
-            player.setAllowFlight(false);
-            player.setFlying(false);
+            endSpin(player, null);
             return;
         }
         
@@ -152,9 +156,6 @@ public class AbilitySpinGUI implements Listener, org.bukkit.command.CommandExecu
         spinStands.put(playerId, spinStand);
         spinFrames.put(playerId, 0);
         
-        // Play start sound
-        player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_CHIME, 1, 1);
-        
         // Start spin animation
         startSpinAnimation(player, abilityNames, selectedAbility);
     }
@@ -167,32 +168,72 @@ public class AbilitySpinGUI implements Listener, org.bukkit.command.CommandExecu
         
         new BukkitRunnable() {
             int frame = 0;
-            final int totalFrames = 60; // 3 seconds at 20fps
             double rotation = 0;
+            int lastAbilityIndex = -1;
+            float basePitch = 0.5f;
             
             @Override
             public void run() {
-                if (!isSpinning.getOrDefault(playerId, false) || frame >= totalFrames) {
+                if (!isSpinning.getOrDefault(playerId, false) || frame >= TOTAL_FRAMES) {
                     // Animation complete - show result
                     showResult(player, selectedAbility);
                     this.cancel();
                     return;
                 }
                 
+                // Determine current phase
+                int phase;
+                if (frame < PHASE_1_END) phase = 1;      // Fast spin
+                else if (frame < PHASE_2_END) phase = 2; // Medium spin
+                else phase = 3;                           // Slow spin
+                
+                spinPhase.put(playerId, phase);
+                
+                // Calculate spin speed based on phase
+                double spinSpeed;
+                float soundPitch;
+                int particleDensity;
+                
+                switch (phase) {
+                    case 1: // Fast spin
+                        spinSpeed = 0.8;
+                        soundPitch = basePitch + (frame * 0.01f);
+                        particleDensity = 10;
+                        break;
+                    case 2: // Medium spin
+                        spinSpeed = 0.4;
+                        soundPitch = basePitch + 0.3f + (frame * 0.005f);
+                        particleDensity = 7;
+                        break;
+                    default: // Slow spin
+                        spinSpeed = 0.15;
+                        soundPitch = basePitch + 0.6f + (frame * 0.002f);
+                        particleDensity = 5;
+                        break;
+                }
+                
                 // Calculate which ability to show this frame
-                int abilityIndex = (frame / 3) % abilityNames.size(); // Change every 3 frames
+                int abilityIndex;
+                if (phase == 3) {
+                    // Slow phase - show abilities slower
+                    abilityIndex = (frame / 10) % abilityNames.size();
+                } else {
+                    abilityIndex = (frame / 3) % abilityNames.size();
+                }
+                
                 String currentAbility = abilityNames.get(abilityIndex);
                 Ability ability = plugin.getAbilityManager().getAbility(currentAbility);
                 
                 // Rotate armor stand
-                rotation += 0.3;
+                rotation += spinSpeed;
                 spinStand.setHeadPose(new EulerAngle(0, rotation, 0));
                 
-                // Move armor stand in circle around player
-                double angle = frame * 0.2;
-                double x = player.getLocation().getX() + 2 * Math.cos(angle);
-                double z = player.getLocation().getZ() + 2 * Math.sin(angle);
-                double y = player.getLocation().getY() + 1.5 + Math.sin(frame * 0.2) * 0.3;
+                // Move armor stand in circle around player with varying height
+                double angle = frame * (phase == 1 ? 0.3 : (phase == 2 ? 0.15 : 0.05));
+                double radius = 2.5 + Math.sin(frame * 0.1) * 0.5;
+                double x = player.getLocation().getX() + radius * Math.cos(angle);
+                double z = player.getLocation().getZ() + radius * Math.sin(angle);
+                double y = player.getLocation().getY() + 1.5 + Math.sin(frame * 0.2) * 0.5;
                 
                 Location newLoc = new Location(player.getWorld(), x, y, z);
                 spinStand.teleport(newLoc);
@@ -202,40 +243,158 @@ public class AbilitySpinGUI implements Listener, org.bukkit.command.CommandExecu
                     spinStand.setCustomName(ability.getDisplayName() + " §f✦");
                 }
                 
-                // Particles around armor stand
-                player.getWorld().spawnParticle(Particle.END_ROD, newLoc.clone().add(0, 0.5, 0), 5, 0.2, 0.2, 0.2, 0.02);
-                player.getWorld().spawnParticle(Particle.PORTAL, newLoc.clone().add(0, 0.5, 0), 3, 0.1, 0.1, 0.1, 0.1);
+                // Phase-based particle effects
+                spawnPhaseParticles(player, newLoc, phase, frame);
                 
-                // Particle trail
-                for (int i = 0; i < 3; i++) {
-                    double trailAngle = angle + i * 2;
-                    double trailX = player.getLocation().getX() + 1.5 * Math.cos(trailAngle);
-                    double trailZ = player.getLocation().getZ() + 1.5 * Math.sin(trailAngle);
-                    Location trailLoc = new Location(player.getWorld(), trailX, y - 0.5, trailZ);
-                    player.getWorld().spawnParticle(Particle.FIREWORK, trailLoc, 2, 0.1, 0.1, 0.1, 0.02);
+                // Musical sounds based on phase
+                if (frame % (phase == 1 ? 4 : (phase == 2 ? 6 : 8)) == 0) {
+                    playMusicalSound(player, phase, frame);
                 }
                 
-                // Sound effects
-                if (frame % 5 == 0) {
-                    player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 0.5f, 1 + (frame * 0.01f));
-                }
-                
-                // Send action bar with spinning text
-                StringBuilder spinText = new StringBuilder("§f✦ ");
-                for (int i = 0; i < 10; i++) {
-                    if (i == frame % 10) {
-                        spinText.append("§6⬤ ");
-                    } else {
-                        spinText.append("§7⬤ ");
-                    }
-                }
-                spinText.append("§f ✦");
-                player.sendActionBar(Component.text(spinText.toString()));
+                // Send action bar with spinning animation
+                sendSpinActionBar(player, frame, phase);
                 
                 frame++;
                 spinFrames.put(playerId, frame);
             }
         }.runTaskTimer(plugin, 0, 1); // 20fps animation
+    }
+    
+    private void spawnPhaseParticles(Player player, Location center, int phase, int frame) {
+        World world = player.getWorld();
+        
+        switch (phase) {
+            case 1: // Fast spin - spiral particles
+                for (int i = 0; i < 5; i++) {
+                    double angle = (frame * 0.5 + i * 72) * Math.PI / 180;
+                    double x = center.getX() + 1.5 * Math.cos(angle);
+                    double z = center.getZ() + 1.5 * Math.sin(angle);
+                    double y = center.getY() + Math.sin(frame * 0.2 + i) * 0.3;
+                    
+                    Location particleLoc = new Location(world, x, y, z);
+                    world.spawnParticle(Particle.END_ROD, particleLoc, 2, 0.1, 0.1, 0.1, 0.02);
+                    world.spawnParticle(Particle.PORTAL, particleLoc, 3, 0.1, 0.1, 0.1, 0.1);
+                }
+                
+                // Outer ring
+                for (int i = 0; i < 360; i += 30) {
+                    double rad = Math.toRadians(i + frame * 5);
+                    double x = player.getLocation().getX() + 3.5 * Math.cos(rad);
+                    double z = player.getLocation().getZ() + 3.5 * Math.sin(rad);
+                    Location ringLoc = new Location(world, x, player.getLocation().getY() + 1, z);
+                    world.spawnParticle(Particle.FIREWORK, ringLoc, 1, 0, 0, 0, 0);
+                }
+                break;
+                
+            case 2: // Medium spin - note particles
+                for (int i = 0; i < 3; i++) {
+                    double angle = (frame * 0.3 + i * 120) * Math.PI / 180;
+                    double x = center.getX() + 2 * Math.cos(angle);
+                    double z = center.getZ() + 2 * Math.sin(angle);
+                    
+                    Location noteLoc = new Location(world, x, center.getY(), z);
+                    world.spawnParticle(Particle.NOTE, noteLoc, 3, 0.2, 0.2, 0.2, 1);
+                    world.spawnParticle(Particle.ENCHANT, noteLoc, 2, 0.1, 0.1, 0.1, 0);
+                }
+                
+                // Floating particles
+                for (int i = 0; i < 5; i++) {
+                    double offsetX = (random.nextDouble() - 0.5) * 4;
+                    double offsetZ = (random.nextDouble() - 0.5) * 4;
+                    Location floatLoc = player.getLocation().clone().add(offsetX, random.nextDouble() * 2, offsetZ);
+                    world.spawnParticle(Particle.HAPPY_VILLAGER, floatLoc, 1, 0, 0, 0, 0);
+                }
+                break;
+                
+            case 3: // Slow spin - dramatic effects
+                // Beam of light
+                for (double y = 0; y < 3; y += 0.3) {
+                    Location beamLoc = center.clone().add(0, y, 0);
+                    world.spawnParticle(Particle.END_ROD, beamLoc, 3, 0.1, 0.1, 0.1, 0.01);
+                }
+                
+                // Sparkles around
+                for (int i = 0; i < 8; i++) {
+                    double angle = (i * 45) * Math.PI / 180;
+                    double x = center.getX() + 2 * Math.cos(angle);
+                    double z = center.getZ() + 2 * Math.sin(angle);
+                    Location sparkleLoc = new Location(world, x, center.getY(), z);
+                    world.spawnParticle(Particle.FIREWORK, sparkleLoc, 2, 0.1, 0.1, 0.1, 0.02);
+                }
+                
+                // Glowing effect
+                world.spawnParticle(Particle.GLOW, center, 5, 0.3, 0.3, 0.3, 0);
+                break;
+        }
+        
+        // Always spawn some basic particles
+        world.spawnParticle(Particle.SPELL, center, 5, 0.3, 0.3, 0.3, 1);
+    }
+    
+    private void playMusicalSound(Player player, int phase, int frame) {
+        switch (phase) {
+            case 1: // Fast spin - quick notes
+                player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_HARP, 0.5f, 1.0f + (frame * 0.005f));
+                if (frame % 8 == 0) {
+                    player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_CHIME, 0.3f, 1.2f);
+                }
+                break;
+                
+            case 2: // Medium spin - melody
+                player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_BELL, 0.4f, 1.1f + (frame * 0.003f));
+                if (frame % 12 == 0) {
+                    player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_FLUTE, 0.3f, 1.3f);
+                }
+                break;
+                
+            case 3: // Slow spin - dramatic
+                player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 0.6f, 1.5f);
+                if (frame % 10 == 0) {
+                    player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 0.3f, 1.8f);
+                }
+                break;
+        }
+    }
+    
+    private void sendSpinActionBar(Player player, int frame, int phase) {
+        StringBuilder spinText = new StringBuilder();
+        
+        // Add phase indicator
+        switch (phase) {
+            case 1:
+                spinText.append("§c⚡ §6⚡ §e⚡ ");
+                break;
+            case 2:
+                spinText.append("§e♪ §6♫ §a♪ ");
+                break;
+            case 3:
+                spinText.append("§d✦ §5✦ §d✦ ");
+                break;
+        }
+        
+        // Add spinning dots
+        spinText.append("§f[");
+        int totalDots = 15;
+        int position = frame % totalDots;
+        
+        for (int i = 0; i < totalDots; i++) {
+            if (i == position) {
+                spinText.append("§6●");
+            } else if (Math.abs(i - position) < 3) {
+                spinText.append("§e●");
+            } else if (Math.abs(i - position) < 6) {
+                spinText.append("§7●");
+            } else {
+                spinText.append("§8●");
+            }
+        }
+        spinText.append("§f]");
+        
+        // Add timer
+        int secondsLeft = (TOTAL_FRAMES - frame) / 20;
+        spinText.append(" §e").append(String.format("%02d", secondsLeft)).append("s");
+        
+        player.sendActionBar(Component.text(spinText.toString()));
     }
     
     private void showResult(Player player, String selectedAbility) {
@@ -263,37 +422,90 @@ public class AbilitySpinGUI implements Listener, org.bukkit.command.CommandExecu
         // Save ability to player
         plugin.getAbilityManager().setPlayerAbility(player, selectedAbility);
         
-        // Celebration effects
-        player.getWorld().playSound(player.getLocation(), Sound.UI_TOAST_CHALLENGE_COMPLETE, 1, 1);
-        player.getWorld().playSound(player.getLocation(), Sound.ENTITY_FIREWORK_ROCKET_BLAST, 1, 1.2f);
+        // GRAND FINALE - Massive celebration
+        World world = player.getWorld();
+        Location loc = player.getLocation();
         
-        // Massive particle explosion
-        for (int i = 0; i < 10; i++) {
-            double angle = i * 36 * Math.PI / 180;
-            double x = player.getLocation().getX() + 3 * Math.cos(angle);
-            double z = player.getLocation().getZ() + 3 * Math.sin(angle);
-            Location particleLoc = new Location(player.getWorld(), x, player.getLocation().getY() + 1, z);
+        // Play victory fanfare
+        player.playSound(loc, Sound.UI_TOAST_CHALLENGE_COMPLETE, 1, 1);
+        player.playSound(loc, Sound.ENTITY_FIREWORK_ROCKET_BLAST, 1, 1.2f);
+        player.playSound(loc, Sound.ENTITY_FIREWORK_ROCKET_TWINKLE, 1, 1.5f);
+        player.playSound(loc, Sound.ENTITY_PLAYER_LEVELUP, 1, 1);
+        
+        // Spiral explosion
+        new BukkitRunnable() {
+            int explosionFrame = 0;
             
-            player.getWorld().spawnParticle(Particle.FIREWORK, particleLoc, 30, 0.3, 0.5, 0.3, 0.1);
-            player.getWorld().spawnParticle(Particle.FLASH, particleLoc, 1);
-        }
+            @Override
+            public void run() {
+                if (explosionFrame >= 20) {
+                    this.cancel();
+                    return;
+                }
+                
+                double radius = explosionFrame * 0.5;
+                for (int i = 0; i < 360; i += 30) {
+                    double rad = Math.toRadians(i + explosionFrame * 10);
+                    double x = loc.getX() + radius * Math.cos(rad);
+                    double z = loc.getZ() + radius * Math.sin(rad);
+                    double y = loc.getY() + 1 + Math.sin(explosionFrame * 0.5) * 0.5;
+                    
+                    Location particleLoc = new Location(world, x, y, z);
+                    world.spawnParticle(Particle.FIREWORK, particleLoc, 3, 0.1, 0.1, 0.1, 0.02);
+                    world.spawnParticle(Particle.END_ROD, particleLoc, 2, 0.1, 0.1, 0.1, 0.01);
+                }
+                
+                explosionFrame++;
+            }
+        }.runTaskTimer(plugin, 0, 1);
         
-        player.getWorld().spawnParticle(Particle.TOTEM_OF_UNDYING, player.getLocation().add(0, 2, 0), 100, 1, 1, 1, 0.5);
+        // Massive particle burst
+        world.spawnParticle(Particle.TOTEM_OF_UNDYING, loc.clone().add(0, 2, 0), 200, 2, 2, 2, 0.5);
+        world.spawnParticle(Particle.FLASH, loc.clone().add(0, 2, 0), 3);
+        world.spawnParticle(Particle.EXPLOSION_EMITTER, loc.clone().add(0, 2, 0), 2);
         
-        // Show title
+        // Show title with ability
         player.showTitle(Title.title(
             Component.text("§6§l✦ ABILITY UNLOCKED! ✦"),
             Component.text(ability.getDisplayName()),
             Title.Times.times(Duration.ofSeconds(1), Duration.ofSeconds(3), Duration.ofSeconds(1))
         ));
         
-        // Send chat message
-        player.sendMessage(Component.text("§a§l✦ Congratulations! ✦"));
-        player.sendMessage(Component.text("§eYou received: " + ability.getDisplayName()));
-        player.sendMessage(Component.text("§7Use right-click to activate!"));
+        // Send chat message with box
+        player.sendMessage("§6§l╔════════════════════════════════════╗");
+        player.sendMessage("§6§l║     §e✦ CONGRATULATIONS! ✦        §6§l║");
+        player.sendMessage("§6§l║                                    §6§l║");
+        player.sendMessage("§6§l║   §fYou received: " + ability.getDisplayName() + "   §6§l║");
+        player.sendMessage("§6§l║                                    §6§l║");
+        player.sendMessage("§6§l║    §7Right-click to activate!      §6§l║");
+        player.sendMessage("§6§l╚════════════════════════════════════╝");
         
         // Clear spin state
         isSpinning.put(playerId, false);
+        spinPhase.remove(playerId);
         spinFrames.remove(playerId);
     }
-                                    }
+    
+    private void endSpin(Player player, String error) {
+        UUID playerId = player.getUniqueId();
+        
+        // Remove armor stand
+        ArmorStand spinStand = spinStands.remove(playerId);
+        if (spinStand != null) {
+            spinStand.remove();
+        }
+        
+        // Unfreeze player
+        player.setWalkSpeed(0.2f);
+        player.setAllowFlight(false);
+        player.setFlying(false);
+        
+        if (error != null) {
+            player.sendMessage(error);
+        }
+        
+        isSpinning.put(playerId, false);
+        spinPhase.remove(playerId);
+        spinFrames.remove(playerId);
+    }
+}
