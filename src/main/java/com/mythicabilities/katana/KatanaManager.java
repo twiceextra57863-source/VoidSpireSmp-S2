@@ -1,60 +1,75 @@
 package com.mythicabilities.katana;
 
 import com.mythicabilities.MythicAbilities;
-import com.mythicabilities.katana.katanas.*;
 import net.kyori.adventure.text.Component;
 import org.bukkit.*;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
-import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.*;
 
 public class KatanaManager {
     
     private final MythicAbilities plugin;
-    private final Map<String, KatanaAbility> abilities = new HashMap<>();
-    private final Map<UUID, Long> cooldowns = new HashMap<>();
+    private final Map<String, Integer> katanaModelData = new HashMap<>();
+    private final Map<String, String> katanaDisplayNames = new HashMap<>();
     private final Random random = new Random();
+    
+    // All 16 katanas
+    public static final String[] KATANA_NAMES = {
+        "Storm Breaker", "Flame Dragon", "Shadow Dancer", "Wind Cutter",
+        "Earth Shaker", "Frost Bite", "Void Walker", "Sun Slash",
+        "Nature's Fang", "Stone Edge", "Wave Splitter", "Blood Moon",
+        "Soul Reaper", "Thunder God", "Celestial Blade", "Dragon's Wrath"
+    };
     
     public KatanaManager(MythicAbilities plugin) {
         this.plugin = plugin;
-        registerAllAbilities();
+        initializeKatanaData();
     }
     
-    private void registerAllAbilities() {
-        abilities.put("Storm Breaker", new StormBreaker(plugin));
-        abilities.put("Flame Dragon", new FlameDragon(plugin));
-        abilities.put("Shadow Dancer", new ShadowDancer(plugin));
-        abilities.put("Wind Cutter", new WindCutter(plugin));
-        abilities.put("Earth Shaker", new EarthShaker(plugin));
-        abilities.put("Frost Bite", new FrostBite(plugin));
-        abilities.put("Void Walker", new VoidWalkerKatana(plugin));
-        abilities.put("Sun Slash", new SunSlash(plugin));
-        abilities.put("Nature's Fang", new NaturesFang(plugin));
-        abilities.put("Stone Edge", new StoneEdge(plugin));
-        abilities.put("Wave Splitter", new WaveSplitter(plugin));
-        abilities.put("Blood Moon", new BloodMoon(plugin));
-        abilities.put("Soul Reaper", new SoulReaper(plugin));
-        abilities.put("Thunder God", new ThunderGod(plugin));
-        abilities.put("Celestial Blade", new CelestialBlade(plugin));
-        abilities.put("Dragon's Wrath", new DragonsWrath(plugin));
+    private void initializeKatanaData() {
+        // Display names
+        katanaDisplayNames.put("Storm Breaker", "§b§l⚡ Storm Breaker ⚡");
+        katanaDisplayNames.put("Flame Dragon", "§c§l🔥 Flame Dragon 🔥");
+        katanaDisplayNames.put("Shadow Dancer", "§8§l🌑 Shadow Dancer 🌑");
+        katanaDisplayNames.put("Wind Cutter", "§a§l💨 Wind Cutter 💨");
+        katanaDisplayNames.put("Earth Shaker", "§6§l🌍 Earth Shaker 🌍");
+        katanaDisplayNames.put("Frost Bite", "§3§l❄️ Frost Bite ❄️");
+        katanaDisplayNames.put("Void Walker", "§5§l🌌 Void Walker 🌌");
+        katanaDisplayNames.put("Sun Slash", "§e§l☀️ Sun Slash ☀️");
+        katanaDisplayNames.put("Nature's Fang", "§2§l🌿 Nature's Fang 🌿");
+        katanaDisplayNames.put("Stone Edge", "§7§l⛰️ Stone Edge ⛰️");
+        katanaDisplayNames.put("Wave Splitter", "§9§l🌊 Wave Splitter 🌊");
+        katanaDisplayNames.put("Blood Moon", "§4§l🌙 Blood Moon 🌙");
+        katanaDisplayNames.put("Soul Reaper", "§d§l💀 Soul Reaper 💀");
+        katanaDisplayNames.put("Thunder God", "§6§l⚡ Thunder God ⚡");
+        katanaDisplayNames.put("Celestial Blade", "§b§l✨ Celestial Blade ✨");
+        katanaDisplayNames.put("Dragon's Wrath", "§c§l🐉 Dragon's Wrath 🐉");
+        
+        // Model data (2000-2015)
+        for (int i = 0; i < KATANA_NAMES.length; i++) {
+            katanaModelData.put(KATANA_NAMES[i], 2000 + i);
+        }
     }
     
     // ============= KATANA CREATION =============
     
     public ItemStack createKatana(String katanaName, Player owner) {
-        if (!KatanaData.isValidKatana(katanaName)) {
+        if (!isValidKatana(katanaName)) {
             return null;
         }
         
         ItemStack katana = new ItemStack(Material.NETHERITE_SWORD);
         ItemMeta meta = katana.getItemMeta();
         
-        meta.displayName(Component.text(KatanaData.getDisplayName(katanaName)));
-        meta.setCustomModelData(KatanaData.getModelData(katanaName));
+        // Set display name
+        meta.displayName(Component.text(getDisplayName(katanaName)));
+        
+        // Set custom model data
+        meta.setCustomModelData(getModelData(katanaName));
         
         // Store metadata
         meta.getPersistentDataContainer().set(
@@ -69,13 +84,12 @@ public class KatanaManager {
                 PersistentDataType.STRING,
                 owner.getUniqueId().toString()
             );
+            meta.getPersistentDataContainer().set(
+                new NamespacedKey(plugin, "katana_bound"),
+                PersistentDataType.BOOLEAN,
+                true
+            );
         }
-        
-        meta.getPersistentDataContainer().set(
-            new NamespacedKey(plugin, "katana_bound"),
-            PersistentDataType.BOOLEAN,
-            owner != null
-        );
         
         // Add lore
         List<Component> lore = new ArrayList<>();
@@ -85,6 +99,8 @@ public class KatanaManager {
         
         if (owner != null) {
             lore.add(Component.text("§7Bound to: §e" + owner.getName()));
+            lore.add(Component.text("§c§l⚠ BOUND ITEM ⚠"));
+            lore.add(Component.text("§7Cannot be dropped or stored"));
         } else {
             lore.add(Component.text("§7Unbound - Can be given"));
         }
@@ -95,67 +111,30 @@ public class KatanaManager {
         meta.lore(lore);
         
         // Enchantments
-        meta.addEnchant(org.bukkit.enchantments.Enchantment.SHARPNESS, 5, true);
-        meta.addEnchant(org.bukkit.enchantments.Enchantment.UNBREAKING, 3, true);
+        meta.addEnchant(org.bukkit.enchantments.Enchantment.SHARPNESS, 7, true);
+        meta.addEnchant(org.bukkit.enchantments.Enchantment.UNBREAKING, 5, true);
+        meta.addEnchant(org.bukkit.enchantments.Enchantment.MENDING, 1, true);
         meta.setUnbreakable(true);
         
         katana.setItemMeta(meta);
-        
-        // Store in data
-        if (owner != null) {
-            KatanaData.setPlayerKatana(owner, katanaName);
-        }
-        
         return katana;
     }
     
     public ItemStack createRandomKatana(Player owner) {
-        List<String> names = KatanaData.getAllKatanaNames();
-        String randomName = names.get(random.nextInt(names.size()));
+        String randomName = KATANA_NAMES[random.nextInt(KATANA_NAMES.length)];
         return createKatana(randomName, owner);
     }
     
-    // ============= KATANA GIVING METHODS =============
+    // ============= KATANA VALIDATION =============
     
-    public boolean giveKatanaToPlayer(Player target, String katanaName) {
-        ItemStack katana = createKatana(katanaName, target);
-        if (katana == null) return false;
-        
-        // Clear inventory if full
-        if (target.getInventory().firstEmpty() == -1) {
-            target.getWorld().dropItem(target.getLocation(), katana);
-            target.sendMessage("§cInventory full! Katana dropped on ground.");
-        } else {
-            target.getInventory().addItem(katana);
+    public boolean isValidKatana(String name) {
+        for (String katana : KATANA_NAMES) {
+            if (katana.equalsIgnoreCase(name)) {
+                return true;
+            }
         }
-        
-        target.sendMessage("§a§l✦ You received: " + KatanaData.getDisplayName(katanaName));
-        target.playSound(target.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1, 1);
-        
-        return true;
+        return false;
     }
-    
-    public void giveRandomKatanaToPlayer(Player target) {
-        String randomName = KatanaData.getAllKatanaNames()
-            .get(random.nextInt(KatanaData.getAllKatanaNames().size()));
-        giveKatanaToPlayer(target, randomName);
-    }
-    
-    public void giveKatanaToAll(String katanaName) {
-        for (Player p : Bukkit.getOnlinePlayers()) {
-            giveKatanaToPlayer(p, katanaName);
-        }
-        Bukkit.broadcast(Component.text("§a§l✦ Everyone received: " + KatanaData.getDisplayName(katanaName)));
-    }
-    
-    public void giveRandomKatanaToAll() {
-        for (Player p : Bukkit.getOnlinePlayers()) {
-            giveRandomKatanaToPlayer(p);
-        }
-        Bukkit.broadcast(Component.text("§a§l✦ Everyone received a random katana!"));
-    }
-    
-    // ============= KATANA INFO =============
     
     public String getKatanaName(ItemStack item) {
         if (item == null || !item.hasItemMeta()) return null;
@@ -188,43 +167,79 @@ public class KatanaManager {
         return bound != null && bound;
     }
     
-    // ============= ABILITY HANDLING =============
+    // ============= GIVING METHODS =============
     
-    public void triggerAbility(Player player, String katanaName, String abilityType) {
-        KatanaAbility ability = abilities.get(katanaName);
-        if (ability == null) return;
+    public boolean giveKatanaToPlayer(Player target, String katanaName) {
+        ItemStack katana = createKatana(katanaName, target);
+        if (katana == null) return false;
         
-        // Check cooldown
-        UUID playerId = player.getUniqueId();
-        long now = System.currentTimeMillis();
-        long lastUse = cooldowns.getOrDefault(playerId, 0L);
-        
-        int cooldownTime = ability.getCooldown(abilityType);
-        if (now - lastUse < cooldownTime * 1000L) {
-            long remaining = (cooldownTime * 1000L - (now - lastUse)) / 1000;
-            player.sendActionBar(Component.text("§c⏳ " + abilityType + " cooldown: " + remaining + "s"));
-            return;
+        if (target.getInventory().firstEmpty() == -1) {
+            target.getWorld().dropItem(target.getLocation(), katana);
+            target.sendMessage("§cInventory full! Katana dropped on ground.");
+        } else {
+            target.getInventory().addItem(katana);
         }
         
-        cooldowns.put(playerId, now);
+        target.sendMessage("§a§l✦ You received: " + getDisplayName(katanaName));
+        target.playSound(target.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1, 1);
         
-        // Trigger appropriate ability
-        switch (abilityType.toLowerCase()) {
-            case "left":
-                ability.onLeftClick(player);
-                break;
-            case "right":
-                ability.onRightClick(player);
-                break;
-            case "sneakleft":
-                ability.onSneakLeft(player);
-                break;
-            case "sneakright":
-                ability.onSneakRight(player);
-                break;
-            case "passive":
-                ability.onPassive(player);
-                break;
+        return true;
+    }
+    
+    public void giveRandomKatanaToPlayer(Player target) {
+        String randomName = KATANA_NAMES[random.nextInt(KATANA_NAMES.length)];
+        giveKatanaToPlayer(target, randomName);
+    }
+    
+    public void giveKatanaToAll(String katanaName) {
+        for (Player p : Bukkit.getOnlinePlayers()) {
+            giveKatanaToPlayer(p, katanaName);
+        }
+        Bukkit.broadcast(Component.text("§a§l✦ Everyone received: " + getDisplayName(katanaName)));
+    }
+    
+    public void giveRandomKatanaToAll() {
+        for (Player p : Bukkit.getOnlinePlayers()) {
+            giveRandomKatanaToPlayer(p);
+        }
+        Bukkit.broadcast(Component.text("§a§l✦ Everyone received a random katana!"));
+    }
+    
+    // ============= REMOVAL METHODS =============
+    
+    public void removeKatanaFromPlayer(Player target) {
+        for (ItemStack item : target.getInventory().getContents()) {
+            if (item != null && isBoundKatana(item)) {
+                target.getInventory().remove(item);
+            }
         }
     }
-            }
+    
+    public void removeAllKatanas() {
+        for (Player p : Bukkit.getOnlinePlayers()) {
+            removeKatanaFromPlayer(p);
+        }
+    }
+    
+    // ============= INFO METHODS =============
+    
+    public String getDisplayName(String katanaName) {
+        return katanaDisplayNames.getOrDefault(katanaName, "§fUnknown Katana");
+    }
+    
+    public int getModelData(String katanaName) {
+        return katanaModelData.getOrDefault(katanaName, 2000);
+    }
+    
+    public List<String> getAllKatanaNames() {
+        return Arrays.asList(KATANA_NAMES);
+    }
+    
+    public String[] getKatanaNames() {
+        return KATANA_NAMES;
+    }
+    
+    public int getKatanaCount() {
+        return KATANA_NAMES.length;
+    }
+}
