@@ -2,14 +2,15 @@ package com.mythicabilities.voting;
 
 import com.mythicabilities.MythicAbilities;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.format.TextColor;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 
 import java.util.*;
 
 public class Team {
+    private final MythicAbilities plugin;
     private final Player leader;
     private final List<UUID> members;
     private String teamName;
@@ -20,24 +21,25 @@ public class Team {
     
     // 15 Katana types
     public static final String[] KATANA_NAMES = {
-        "§bStorm Breaker",
-        "§cFlame Dragon",
-        "§dShadow Dancer",
-        "§aWind Cutter",
-        "§6Earth Shaker",
-        "§9Frost Bite",
-        "§5Void Walker",
-        "§eSun Slash",
-        "§2Nature's Fang",
-        "§7Stone Edge",
-        "§3Wave Splitter",
-        "§4Blood Moon",
-        "§dSoul Reaper",
-        "§6Thunder God",
-        "§bCelestial Blade"
+        "Storm Breaker",
+        "Flame Dragon",
+        "Shadow Dancer",
+        "Wind Cutter",
+        "Earth Shaker",
+        "Frost Bite",
+        "Void Walker",
+        "Sun Slash",
+        "Nature's Fang",
+        "Stone Edge",
+        "Wave Splitter",
+        "Blood Moon",
+        "Soul Reaper",
+        "Thunder God",
+        "Celestial Blade"
     };
     
-    public Team(Player leader, List<UUID> voters) {
+    public Team(MythicAbilities plugin, Player leader, List<UUID> voters) {
+        this.plugin = plugin;
         this.leader = leader;
         this.members = new ArrayList<>();
         this.members.add(leader.getUniqueId());
@@ -69,8 +71,30 @@ public class Team {
     }
     
     private void giveLeaderKatana() {
-        // This will be handled by KatanaManager
-        // Give custom katana item with abilities
+        ItemStack katana = plugin.getKatanaManager().createBoundKatana(leader, katanaType);
+        leader.getInventory().addItem(katana);
+        leader.sendMessage(Component.text("§aYou received: " + getKatanaDisplayName()));
+    }
+    
+    private String getKatanaDisplayName() {
+        switch (katanaType) {
+            case "Storm Breaker": return "§b§l⚡ Storm Breaker ⚡";
+            case "Flame Dragon": return "§c§l🔥 Flame Dragon 🔥";
+            case "Shadow Dancer": return "§8§l🌑 Shadow Dancer 🌑";
+            case "Wind Cutter": return "§a§l💨 Wind Cutter 💨";
+            case "Earth Shaker": return "§6§l🌍 Earth Shaker 🌍";
+            case "Frost Bite": return "§3§l❄️ Frost Bite ❄️";
+            case "Void Walker": return "§5§l🌌 Void Walker 🌌";
+            case "Sun Slash": return "§e§l☀️ Sun Slash ☀️";
+            case "Nature's Fang": return "§2§l🌿 Nature's Fang 🌿";
+            case "Stone Edge": return "§7§l⛰️ Stone Edge ⛰️";
+            case "Wave Splitter": return "§9§l🌊 Wave Splitter 🌊";
+            case "Blood Moon": return "§4§l🌙 Blood Moon 🌙";
+            case "Soul Reaper": return "§d§l💀 Soul Reaper 💀";
+            case "Thunder God": return "§6§l⚡ Thunder God ⚡";
+            case "Celestial Blade": return "§b§l✨ Celestial Blade ✨";
+            default: return "§fKatana";
+        }
     }
     
     public boolean isMember(Player player) {
