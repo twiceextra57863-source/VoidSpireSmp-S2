@@ -146,6 +146,10 @@ public class AdminCommand implements CommandExecutor, TabCompleter {
                 }
                 break;
                 
+            case "testcombo":
+                testCombo(player);
+                break;
+                
             case "help":
                 showHelp(player);
                 break;
@@ -169,7 +173,10 @@ public class AdminCommand implements CommandExecutor, TabCompleter {
         if (args.length == 1) {
             // First argument - main commands
             String partial = args[0].toLowerCase();
-            List<String> commands = Arrays.asList("start", "stop", "status", "set", "border", "pvp", "grace", "event", "force", "help");
+            List<String> commands = Arrays.asList(
+                "start", "stop", "status", "set", "border", "pvp", 
+                "grace", "event", "force", "testcombo", "help"
+            );
             
             for (String cmd : commands) {
                 if (cmd.startsWith(partial)) {
@@ -489,7 +496,7 @@ public class AdminCommand implements CommandExecutor, TabCompleter {
         }
     }
     
-    // New Event Methods
+    // Event Methods
     private void startAbilityEvent(Player player, int seconds, String abilityName) {
         // Check if ability exists (if not random)
         if (!abilityName.equalsIgnoreCase("random")) {
@@ -547,6 +554,49 @@ public class AdminCommand implements CommandExecutor, TabCompleter {
         player.sendMessage("§6╚══════════════════════════════════════════╝");
     }
     
+    // TEST COMBO METHOD - New method to test ability system
+    private void testCombo(Player player) {
+        String abilityName = plugin.getAbilityManager().getPlayerAbility(player);
+        
+        player.sendMessage("§6§l╔═══════════ COMBO TEST ═══════════╗");
+        
+        if (abilityName == null) {
+            player.sendMessage("§6║ §c❌ You don't have an ability!");
+            player.sendMessage("§6║ §eUse §a/giveability <ability> §eto get one");
+            player.sendMessage("§6╚══════════════════════════════════╝");
+            return;
+        }
+        
+        Ability ability = plugin.getAbilityManager().getAbility(abilityName);
+        int currentCombo = plugin.getAbilityManager().getCombo(player);
+        boolean onCooldown = plugin.getCooldownManager().isOnCooldown(player, abilityName);
+        long remainingCooldown = plugin.getCooldownManager().getRemainingCooldown(player, abilityName);
+        
+        player.sendMessage("§6║ §eYour Ability: " + ability.getDisplayName());
+        player.sendMessage("§6║ §eAbility Name: §f" + abilityName);
+        player.sendMessage("§6║ §eCooldown: §f" + ability.getCooldown() + " seconds");
+        player.sendMessage("§6║ ");
+        player.sendMessage("§6║ §eCurrent Combo: §f" + currentCombo + "§e/3");
+        player.sendMessage("§6║ §eOn Cooldown: " + (onCooldown ? "§cYES" : "§aNO"));
+        if (onCooldown) {
+            player.sendMessage("§6║ §eRemaining: §f" + remainingCooldown + "s");
+        }
+        player.sendMessage("§6║ ");
+        
+        // Test manual trigger
+        player.sendMessage("§6║ §eTesting manual trigger...");
+        if (onCooldown) {
+            player.sendMessage("§6║ §c❌ Cannot trigger - on cooldown");
+        } else {
+            player.sendMessage("§6║ §a✅ Triggering ability now!");
+            ability.onTrigger(player);
+            plugin.getCooldownManager().setCooldown(player, abilityName, ability.getCooldown());
+            plugin.getAbilityManager().resetCombo(player);
+        }
+        
+        player.sendMessage("§6╚══════════════════════════════════╝");
+    }
+    
     private void showEventHelp(Player player) {
         player.sendMessage("§6§l╔═══════════ EVENT COMMANDS ═══════════╗");
         player.sendMessage("§6║ §e/smp event start <seconds> [ability]");
@@ -581,6 +631,7 @@ public class AdminCommand implements CommandExecutor, TabCompleter {
         player.sendMessage("§6║ §e/smp grace <seconds> §7- Set grace time");
         player.sendMessage("§6║ §e/smp event §7- Ability event commands");
         player.sendMessage("§6║ §e/smp force §7- Force give controls");
+        player.sendMessage("§6║ §e/smp testcombo §7- Test combo system");
         player.sendMessage("§6║ §e/admin §7- Open admin GUI");
         player.sendMessage("§6║ §e/giveability <player> <ability> §7- Give ability");
         player.sendMessage("§6╚═══════════════════════════════════════════╝");
