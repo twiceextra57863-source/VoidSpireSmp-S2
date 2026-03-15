@@ -20,6 +20,8 @@ import com.mythicabilities.voting.TeamCommand;
 import com.mythicabilities.voting.KatanaCommand;
 import com.mythicabilities.voting.LeaderCommand;
 import com.mythicabilities.voting.KatanaListener;
+import com.mythicabilities.scoreboard.ScoreboardManager; // NEW
+import com.mythicabilities.scoreboard.ScoreboardCommand; // NEW
 import org.bukkit.plugin.java.JavaPlugin;
 
 public class MythicAbilities extends JavaPlugin {
@@ -33,9 +35,12 @@ public class MythicAbilities extends JavaPlugin {
     private AbilitySpinGUI spinGUI;
     private ForceAbilityManager forceAbilityManager;
     
-    // NEW: Voting System Managers
+    // Voting System Managers
     private VoteManager voteManager;
     private KatanaManager katanaManager;
+    
+    // NEW: Scoreboard Manager
+    private ScoreboardManager scoreboardManager;
     
     @Override
     public void onEnable() {
@@ -53,9 +58,12 @@ public class MythicAbilities extends JavaPlugin {
         this.spinGUI = new AbilitySpinGUI(this);
         this.forceAbilityManager = new ForceAbilityManager(this);
         
-        // NEW: Initialize Voting System
+        // Initialize Voting System
         this.voteManager = new VoteManager(this);
         this.katanaManager = new KatanaManager(this);
+        
+        // NEW: Initialize Scoreboard System
+        this.scoreboardManager = new ScoreboardManager(this);
         
         // Register abilities
         registerAbilities();
@@ -67,7 +75,7 @@ public class MythicAbilities extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new AdminPanelGUI(this, adminCommand), this);
         getServer().getPluginManager().registerEvents(spinGUI, this);
         
-        // NEW: Register Voting Listeners
+        // Register Voting Listeners
         getServer().getPluginManager().registerEvents(new KatanaListener(this), this);
         
         // Register commands with tab completers
@@ -84,16 +92,20 @@ public class MythicAbilities extends JavaPlugin {
         getCommand("giveability").setExecutor(giveAbilityCommand);
         getCommand("giveability").setTabCompleter(giveAbilityCommand);
         
-        // NEW: Register Voting Commands
+        // Register Voting Commands
         getCommand("vote").setExecutor(new VoteCommand(this));
         getCommand("team").setExecutor(new TeamCommand(this));
         getCommand("katana").setExecutor(new KatanaCommand(this));
         getCommand("leader").setExecutor(new LeaderCommand(this));
         
+        // NEW: Register Scoreboard Command
+        getCommand("scoreboard").setExecutor(new ScoreboardCommand(this));
+        
         getLogger().info("MythicAbilities has been enabled successfully!");
         getLogger().info("Supporting Minecraft 1.21.11 with latest features!");
         getLogger().info("Loaded " + abilityManager.getAllAbilities().size() + " abilities!");
         getLogger().info("Voting System initialized with 15 legendary katanas!");
+        getLogger().info("Scoreboard System initialized with dynamic rankings!");
     }
     
     private void registerAbilities() {
@@ -154,12 +166,17 @@ public class MythicAbilities extends JavaPlugin {
         return forceAbilityManager;
     }
     
-    // NEW: Voting System Getters
+    // Voting System Getters
     public VoteManager getVoteManager() {
         return voteManager;
     }
     
     public KatanaManager getKatanaManager() {
         return katanaManager;
+    }
+    
+    // NEW: Scoreboard System Getter
+    public ScoreboardManager getScoreboardManager() {
+        return scoreboardManager;
     }
 }
