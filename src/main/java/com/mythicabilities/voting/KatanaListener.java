@@ -10,17 +10,16 @@ import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryType;
-import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.inventory.ItemStack;
 
 public class KatanaListener implements Listener {
     
     private final MythicAbilities plugin;
-    private KatanaManager katanaManager;
+    private com.mythicabilities.voting.KatanaManager katanaManager; // Use voting manager type
     
     public KatanaListener(MythicAbilities plugin) {
         this.plugin = plugin;
-        this.katanaManager = plugin.getKatanaManager(); // FIXED: Now works
+        this.katanaManager = plugin.getVotingKatanaManager(); // Get voting manager
     }
     
     @EventHandler
@@ -40,7 +39,6 @@ public class KatanaListener implements Listener {
         ItemStack current = event.getCurrentItem();
         ItemStack cursor = event.getCursor();
         
-        // Check if trying to move bound katana to storage
         if (isStorageInventory(event.getView().getType())) {
             if ((current != null && katanaManager.isBoundKatana(current)) || 
                 (cursor != null && katanaManager.isBoundKatana(cursor))) {
@@ -51,40 +49,22 @@ public class KatanaListener implements Listener {
     }
     
     private boolean isStorageInventory(InventoryType type) {
-        return type == InventoryType.CHEST ||
-               type == InventoryType.BARREL ||
-               type == InventoryType.SHULKER_BOX ||
-               type == InventoryType.ENDER_CHEST ||
-               type == InventoryType.HOPPER ||
-               type == InventoryType.DISPENSER ||
+        return type == InventoryType.CHEST || type == InventoryType.BARREL ||
+               type == InventoryType.SHULKER_BOX || type == InventoryType.ENDER_CHEST ||
+               type == InventoryType.HOPPER || type == InventoryType.DISPENSER ||
                type == InventoryType.DROPPER;
     }
     
     @EventHandler
     public void onPlayerDeath(PlayerDeathEvent event) {
         Player player = event.getEntity();
-        
-        // Remove bound katanas from drops
         event.getDrops().removeIf(item -> item != null && katanaManager.isBoundKatana(item));
-        
-        // Handle death logic
         katanaManager.handleKatanaDeath(player);
     }
     
     @EventHandler
     public void onPlayerRespawn(PlayerRespawnEvent event) {
         Player player = event.getPlayer();
-        
-        // Give back katana if applicable
         katanaManager.handlePlayerRespawn(player);
-    }
-    
-    @EventHandler
-    public void onEntityDamageByEntity(EntityDamageByEntityEvent event) {
-        if (!(event.getDamager() instanceof Player hunter)) return;
-        if (!(event.getEntity() instanceof Player target)) return;
-        
-        // Check if target has bounty
-        // This will be expanded for bounty hunting
     }
 }
