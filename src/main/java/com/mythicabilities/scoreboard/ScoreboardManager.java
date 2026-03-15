@@ -23,7 +23,7 @@ public class ScoreboardManager {
     private final Map<UUID, PlayerStats> playerStats = new ConcurrentHashMap<>();
     private final Map<UUID, Boolean> scoreboardEnabled = new ConcurrentHashMap<>();
     private final Map<UUID, Integer> animationTasks = new ConcurrentHashMap<>();
-    private Scoreboard scoreboard;
+    private org.bukkit.scoreboard.Scoreboard scoreboard; // FIXED: Use fully qualified name
     private Objective objective;
     private Player currentAnimatingPlayer = null;
     private boolean animationInProgress = false;
@@ -35,8 +35,8 @@ public class ScoreboardManager {
     }
     
     private void setupScoreboard() {
-        ScoreboardManager manager = Bukkit.getScoreboardManager();
-        scoreboard = manager.getNewScoreboard();
+        org.bukkit.scoreboard.ScoreboardManager manager = Bukkit.getScoreboardManager(); // FIXED: Use fully qualified name
+        scoreboard = manager.getNewScoreboard(); // FIXED: Now works with correct type
         objective = scoreboard.registerNewObjective("teamrank", "dummy", 
             Component.text("§6§l✦ TEAM RANKINGS ✦"));
         objective.setDisplaySlot(DisplaySlot.SIDEBAR);
@@ -68,7 +68,10 @@ public class ScoreboardManager {
         
         // Collect stats from all players
         for (PlayerStats stats : playerStats.values()) {
-            Team team = plugin.getVoteManager().getTeam(Bukkit.getPlayer(stats.playerId));
+            Player player = Bukkit.getPlayer(stats.playerId);
+            if (player == null) continue;
+            
+            Team team = plugin.getVoteManager().getTeam(player);
             if (team == null) continue;
             
             String teamName = team.getTeamName();
@@ -250,14 +253,14 @@ public class ScoreboardManager {
                 // Spiral up particles
                 double angle = ticks * 0.3;
                 double radius = 2;
-                double y = ticks * 0.05;
+                double yOffset = ticks * 0.05; // FIXED: Renamed to yOffset to avoid conflict
                 
                 for (int i = 0; i < 4; i++) {
                     double offsetAngle = angle + (i * 90 * Math.PI / 180);
                     double x = originalLoc.getX() + radius * Math.cos(offsetAngle);
                     double z = originalLoc.getZ() + radius * Math.sin(offsetAngle);
                     
-                    Location particleLoc = new Location(player.getWorld(), x, originalLoc.getY() + y, z);
+                    Location particleLoc = new Location(player.getWorld(), x, originalLoc.getY() + yOffset, z);
                     
                     // Alternate particles
                     if (ticks % 10 < 5) {
@@ -415,4 +418,4 @@ public class ScoreboardManager {
             return members.size() > count ? members.subList(0, count) : members;
         }
     }
-                                                                                                  }
+            }
