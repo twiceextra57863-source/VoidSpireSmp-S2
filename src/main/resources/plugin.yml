@@ -3,7 +3,7 @@ version: 1.0.0
 main: com.mythicabilities.MythicAbilities
 api-version: 1.21
 author: YourName
-description: Advanced abilities plugin with voting system and 15 legendary katanas
+description: Advanced abilities plugin with voting system, 15 legendary katanas, and dynamic scoreboard
 
 commands:
   # Ability Commands
@@ -57,6 +57,13 @@ commands:
     usage: /leader <promote|kick|disband>
     permission: mythicabilities.leader
     aliases: [king, chief]
+    
+  # 📊 SCOREBOARD COMMANDS (NEW)
+  scoreboard:
+    description: Toggle scoreboard on/off
+    usage: /scoreboard [on|off]
+    permission: mythicabilities.scoreboard
+    aliases: [sb, board, leaderboard]
 
 permissions:
   # 👤 Player Permissions
@@ -74,6 +81,11 @@ permissions:
     
   mythicabilities.katana:
     description: Can use katana commands
+    default: true
+    
+  # NEW: Scoreboard Permission
+  mythicabilities.scoreboard:
+    description: Can toggle scoreboard
     default: true
     
   # 👑 Leader Permissions  
@@ -103,12 +115,23 @@ permissions:
       mythicabilities.team: true
       mythicabilities.katana: true
       mythicabilities.leader: true
+      mythicabilities.scoreboard: true
       
   mythicabilities.bypass.cooldown:
     description: Bypass ability cooldowns
     default: op
     
   mythicabilities.bypass.combo:
+    description: Abilities always ready (no combo needed)
+    default: op
+    
+  mythicabilities.event.create:
+    description: Create ability events
+    default: op
+    
+  mythicabilities.force.give:
+    description: Force give abilities to players
+    default: op  mythicabilities.bypass.combo:
     description: Abilities always ready (no combo needed)
     default: op
     
