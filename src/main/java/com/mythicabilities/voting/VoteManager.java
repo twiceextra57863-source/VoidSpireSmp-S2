@@ -47,12 +47,12 @@ public class VoteManager {
     
     public boolean vote(Player voter, Player target) {
         if (!votingActive) {
-            voter.sendMessage("§cVoting is not active!");
+            voter.sendMessage(Component.text("§cVoting is not active!"));
             return false;
         }
         
         if (voter.equals(target)) {
-            voter.sendMessage("§cYou cannot vote for yourself!");
+            voter.sendMessage(Component.text("§cYou cannot vote for yourself!"));
             return false;
         }
         
@@ -60,7 +60,7 @@ public class VoteManager {
         List<UUID> voters = voterMap.getOrDefault(targetId, new ArrayList<>());
         
         if (voters.contains(voter.getUniqueId())) {
-            voter.sendMessage("§cYou already voted for " + target.getName());
+            voter.sendMessage(Component.text("§cYou already voted for " + target.getName()));
             return false;
         }
         
@@ -100,10 +100,10 @@ public class VoteManager {
             Bukkit.broadcast(Component.text("§6§l║   §e§l" + winner.getName() + "            §6§l║"));
             Bukkit.broadcast(Component.text("§6§l║                                    §6§l║"));
             Bukkit.broadcast(Component.text("§6§l║  §7They received a legendary      §6§l║"));
-            Bukkit.broadcast(Component.text("§6§l║  §7Katana!                        §6§l║"));
+            Bukkit.broadcast(Component.text("§6§l║  §7katana!                        §6§l║"));
             Bukkit.broadcast(Component.text("§6§l╚════════════════════════════════════╝"));
         } else {
-            Bukkit.broadcast("§cNo leader elected! Try again later.");
+            Bukkit.broadcast(Component.text("§cNo leader elected! Try again later."));
         }
     }
     
@@ -120,7 +120,7 @@ public class VoteManager {
     }
     
     private void createTeam(Player leader) {
-        Team team = new Team(leader, voterMap.get(leader.getUniqueId()));
+        Team team = new Team(plugin, leader, voterMap.get(leader.getUniqueId()));
         teams.put(leader.getUniqueId(), team);
     }
     
@@ -131,5 +131,11 @@ public class VoteManager {
             }
         }
         return null;
+    }
+    
+    public void disbandTeam(Team team) {
+        if (team != null) {
+            teams.remove(team.getLeader().getUniqueId());
+        }
     }
 }
