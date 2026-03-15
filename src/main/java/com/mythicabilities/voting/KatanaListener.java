@@ -16,11 +16,11 @@ import org.bukkit.inventory.ItemStack;
 public class KatanaListener implements Listener {
     
     private final MythicAbilities plugin;
-    private final KatanaManager katanaManager;
+    private KatanaManager katanaManager;
     
     public KatanaListener(MythicAbilities plugin) {
         this.plugin = plugin;
-        this.katanaManager = plugin.getKatanaManager();
+        this.katanaManager = plugin.getKatanaManager(); // FIXED: Now works
     }
     
     @EventHandler
@@ -42,7 +42,8 @@ public class KatanaListener implements Listener {
         
         // Check if trying to move bound katana to storage
         if (isStorageInventory(event.getView().getType())) {
-            if (katanaManager.isBoundKatana(current) || katanaManager.isBoundKatana(cursor)) {
+            if ((current != null && katanaManager.isBoundKatana(current)) || 
+                (cursor != null && katanaManager.isBoundKatana(cursor))) {
                 event.setCancelled(true);
                 event.getWhoClicked().sendMessage("§cYou cannot store a bound katana!");
             }
@@ -64,7 +65,7 @@ public class KatanaListener implements Listener {
         Player player = event.getEntity();
         
         // Remove bound katanas from drops
-        event.getDrops().removeIf(item -> katanaManager.isBoundKatana(item));
+        event.getDrops().removeIf(item -> item != null && katanaManager.isBoundKatana(item));
         
         // Handle death logic
         katanaManager.handleKatanaDeath(player);
